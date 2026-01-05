@@ -23,26 +23,21 @@ const CodeBlock: React.FC<CodeBlockProps> = ({ code, label, explanation, playgro
 
   const getPlaygroundLink = () => {
     if (playgroundUrl) return playgroundUrl;
-
-    // Auto-generate PHPStan Playground URL
-    // 1. Ensure code starts with <?php
-    const cleanCode = code.trim();
-    const runnableCode = cleanCode.startsWith('<?php') 
-      ? cleanCode 
-      : `<?php\n\n${cleanCode}`;
-    
-    // 2. Encode for URL
-    const encodedCode = encodeURIComponent(runnableCode);
-    
-    // 3. Construct URL (Using try instead of play)
-    return `https://phpstan.org/try?level=9&phpVersion=8.3&code=${encodedCode}`;
+    // PHPStan playground doesn't support pre-filling via URL parameters
+    // Users will paste the auto-copied code manually
+    return 'https://phpstan.org/try';
   };
 
   const finalPlaygroundUrl = getPlaygroundLink();
 
   const handlePlaygroundClick = () => {
-    // Auto-copy code when opening playground
-    navigator.clipboard.writeText(code);
+    // Auto-copy code when opening playground, ensuring it starts with <?php
+    const cleanCode = code.trim();
+    const runnableCode = cleanCode.startsWith('<?php') 
+      ? cleanCode 
+      : `<?php\n\n${cleanCode}`;
+    
+    navigator.clipboard.writeText(runnableCode);
     setRunCopied(true);
     setTimeout(() => setRunCopied(false), 3000);
   };
@@ -74,7 +69,7 @@ const CodeBlock: React.FC<CodeBlockProps> = ({ code, label, explanation, playgro
             </a>
             {/* Tooltip for Copy Feedback */}
             <div className={`absolute right-0 top-full mt-2 w-48 p-2 bg-slate-800 text-white text-xs rounded shadow-lg transition-opacity duration-200 pointer-events-none z-10 text-center ${runCopied ? 'opacity-100' : 'opacity-0'}`}>
-              Code copied! Paste it in the playground.
+              Code copied to clipboard!
             </div>
            </div>
 
