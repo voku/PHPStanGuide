@@ -69,7 +69,7 @@ const CodeBlock: React.FC<CodeBlockProps> = ({ code, label, explanation, playgro
             </a>
             {/* Tooltip for Copy Feedback */}
             <div className={`absolute right-0 top-full mt-2 w-48 p-2 bg-slate-800 text-white text-xs rounded shadow-lg transition-opacity duration-200 pointer-events-none z-10 text-center ${runCopied ? 'opacity-100' : 'opacity-0'}`}>
-              Code copied! Paste it in the playground.
+              Code copied to clipboard!
             </div>
            </div>
 
