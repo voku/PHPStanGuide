@@ -1,0 +1,5 @@
+{
+  "name": "PHPStan Hero",
+  "description": "An interactive, gamified guide to mastering Modern PHPDocs and PHPStan based on the 2025 Guide. Level up your type safety skills.",
+  "requestFramePermissions": []
+}
