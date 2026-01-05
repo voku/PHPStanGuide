@@ -34,8 +34,8 @@ const CodeBlock: React.FC<CodeBlockProps> = ({ code, label, explanation, playgro
     // 2. Encode for URL
     const encodedCode = encodeURIComponent(runnableCode);
     
-    // 3. Construct URL (Using try instead of play)
-    return `https://phpstan.org/try?level=9&phpVersion=8.3&code=${encodedCode}`;
+    // 3. Construct URL - only 'code' parameter is supported
+    return `https://phpstan.org/try?code=${encodedCode}`;
   };
 
   const finalPlaygroundUrl = getPlaygroundLink();
