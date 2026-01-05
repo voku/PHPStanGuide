@@ -1,8 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { Sparkles, Copy, Check, Play, ExternalLink, Loader2 } from 'lucide-react';
+import React, { useState } from 'react';
+import { Copy, Check, Play, ExternalLink, Info } from 'lucide-react';
 import { ReactNode } from 'react';
-import { generateExplanation } from '../services/geminiService';
-import MarkdownRenderer from './MarkdownRenderer';
 
 interface CodeBlockProps {
   code: string;
@@ -12,53 +10,10 @@ interface CodeBlockProps {
   className?: string;
 }
 
-// Simple hash function for cache keys
-const hashCode = (str: string): string => {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    const char = str.charCodeAt(i);
-    hash = (hash << 5) - hash + char;
-    hash = hash & hash; // Convert to 32bit integer
-  }
-  return Math.abs(hash).toString(16);
-};
-
 const CodeBlock: React.FC<CodeBlockProps> = ({ code, label, explanation, playgroundUrl, className = '' }) => {
   const [showExplanation, setShowExplanation] = useState(false);
   const [copied, setCopied] = useState(false);
   const [runCopied, setRunCopied] = useState(false);
-  
-  // AI Explanation State
-  const [aiExplanation, setAiExplanation] = useState<string | null>(null);
-  const [loadingAi, setLoadingAi] = useState(false);
-
-  // Pre-fetch AI explanation if static one is missing
-  useEffect(() => {
-    if (explanation) return; // Use static if available
-
-    const fetchExplanation = async () => {
-      const cacheKey = `phpstan_expl_${hashCode(code)}`;
-      const cached = localStorage.getItem(cacheKey);
-
-      if (cached) {
-        setAiExplanation(cached);
-        return;
-      }
-
-      setLoadingAi(true);
-      try {
-        const generated = await generateExplanation(label || 'PHPStan Concept', code);
-        setAiExplanation(generated);
-        localStorage.setItem(cacheKey, generated);
-      } catch (e) {
-        console.error("Failed to fetch explanation", e);
-      } finally {
-        setLoadingAi(false);
-      }
-    };
-
-    fetchExplanation();
-  }, [code, explanation, label]);
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(code);
@@ -131,36 +86,29 @@ const CodeBlock: React.FC<CodeBlockProps> = ({ code, label, explanation, playgro
             {copied ? <Check size={14} /> : <Copy size={14} />}
           </button>
           
-          <button 
-            onClick={() => setShowExplanation(!showExplanation)}
-            className={`text-xs flex items-center gap-1.5 px-3 py-1.5 rounded-full font-medium transition-all ${
-              showExplanation
-                ? 'bg-slate-200 text-slate-800 dark:bg-slate-700 dark:text-slate-200' 
-                : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700'
-            }`}
-          >
-            {loadingAi ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />}
-            {showExplanation ? 'Hide' : 'Explain'}
-          </button>
+          {explanation && (
+            <button 
+              onClick={() => setShowExplanation(!showExplanation)}
+              className={`text-xs flex items-center gap-1.5 px-3 py-1.5 rounded-full font-medium transition-all ${
+                showExplanation
+                  ? 'bg-slate-200 text-slate-800 dark:bg-slate-700 dark:text-slate-200' 
+                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700'
+              }`}
+            >
+              <Info size={12} />
+              {showExplanation ? 'Hide' : 'Explain'}
+            </button>
+          )}
         </div>
       </div>
 
-      {showExplanation && (
+      {showExplanation && explanation && (
         <div className="bg-brand-50/50 dark:bg-brand-900/10 border-b border-brand-100 dark:border-brand-900/20 p-5 text-sm text-slate-700 dark:text-slate-300 animate-in slide-in-from-top-2">
            <div className="flex items-center gap-2 mb-2 text-brand-600 dark:text-brand-400 font-semibold text-xs uppercase tracking-wide">
-             <Sparkles size={12} /> Expert Insight
+             <Info size={12} /> Expert Insight
            </div>
            <div className="leading-relaxed">
-             {explanation ? (
-               explanation
-             ) : (
-               aiExplanation ? <MarkdownRenderer content={aiExplanation} /> : (
-                 <div className="flex items-center gap-2 text-slate-500 italic">
-                   <Loader2 size={14} className="animate-spin" />
-                   Analyzing code with AI...
-                 </div>
-               )
-             )}
+             {explanation}
            </div>
         </div>
       )}
