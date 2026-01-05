@@ -23,26 +23,21 @@ const CodeBlock: React.FC<CodeBlockProps> = ({ code, label, explanation, playgro
 
   const getPlaygroundLink = () => {
     if (playgroundUrl) return playgroundUrl;
-
-    // Auto-generate PHPStan Playground URL
-    // 1. Ensure code starts with <?php
-    const cleanCode = code.trim();
-    const runnableCode = cleanCode.startsWith('<?php') 
-      ? cleanCode 
-      : `<?php\n\n${cleanCode}`;
-    
-    // 2. Encode for URL
-    const encodedCode = encodeURIComponent(runnableCode);
-    
-    // 3. Construct URL - PHPStan playground uses 'source' parameter
-    return `https://phpstan.org/try?source=${encodedCode}`;
+    // PHPStan playground doesn't support pre-filling via URL parameters
+    // Users will paste the auto-copied code manually
+    return 'https://phpstan.org/try';
   };
 
   const finalPlaygroundUrl = getPlaygroundLink();
 
   const handlePlaygroundClick = () => {
-    // Auto-copy code when opening playground
-    navigator.clipboard.writeText(code);
+    // Auto-copy code when opening playground, ensuring it starts with <?php
+    const cleanCode = code.trim();
+    const runnableCode = cleanCode.startsWith('<?php') 
+      ? cleanCode 
+      : `<?php\n\n${cleanCode}`;
+    
+    navigator.clipboard.writeText(runnableCode);
     setRunCopied(true);
     setTimeout(() => setRunCopied(false), 3000);
   };
