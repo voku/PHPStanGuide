@@ -117,6 +117,8 @@ npm run build
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
+**Repository:** [https://github.com/voku/PHPStanGuide](https://github.com/voku/PHPStanGuide)
+
 1. Fork the repository
 2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
 3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
