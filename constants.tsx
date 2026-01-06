@@ -348,8 +348,113 @@ function processUser(array $user): void {
     }
   },
   {
+    id: 'object-shapes',
+    title: '4. Object Shapes',
+    content: (
+      <>
+        <P>
+          Just like array shapes define strict structures for arrays, object shapes let you specify exact public property types on objects.
+        </P>
+        <P>
+          Object shapes are powerful for modeling data structures that use public properties instead of arrays. They're especially useful when working with stdClass objects or when you need to validate the structure of generic objects.
+        </P>
+        <SubHeader>Key Types</SubHeader>
+        <List items={[
+          <><Code>object{'{'}foo: int, bar: string{'}'}</Code>: Object with required public properties.</>,
+          <><Code>object{'{'}foo: int, bar?: string{'}'}</Code>: Object with optional property bar.</>,
+          <><Code>object{'{'}foo: int{'}'}&stdClass</Code>: Object shape intersected with stdClass for writable properties.</>
+        ]} />
+        <SubHeader>Read-Only vs Writable</SubHeader>
+        <P>
+          By default, object shape properties are <Strong>read-only</Strong>. To make them writable, intersect with a concrete class like <Code>stdClass</Code>.
+        </P>
+      </>
+    ),
+    codeBlocks: [
+      {
+        language: 'php',
+        label: 'Basic Object Shape',
+        code: `/**
+ * @return object{id: int, name: string, active: bool}
+ */
+function getUser(): object {
+    $user = new stdClass();
+    $user->id = 1;
+    $user->name = 'Alice';
+    $user->active = true;
+    return $user;
+}
+
+$user = getUser();
+echo $user->name; // PHPStan knows this is a string`,
+        explanation: "Object shapes allow you to define precise types for objects with public properties. PHPStan will ensure that the returned object has exactly these properties with the correct types, providing full IDE autocomplete and type safety."
+      },
+      {
+        language: 'php',
+        label: 'Optional Properties',
+        code: `/**
+ * @param object{name: string, email?: string, avatar?: string} $profile
+ */
+function displayProfile(object $profile): void {
+    echo $profile->name; // Always safe
+    
+    // Optional properties need existence checks
+    if (isset($profile->email)) {
+        echo $profile->email;
+    }
+}`,
+        explanation: "Just like array shapes, object shapes support optional properties using the `?` suffix. Optional properties might not exist on the object, so you need to check their existence before accessing them."
+      },
+      {
+        language: 'php',
+        label: 'Writable Object Shapes',
+        code: `/**
+ * @return object{id: int, name: string}&stdClass
+ */
+function createUser(): object {
+    $user = new stdClass();
+    $user->id = 1;
+    $user->name = 'Bob';
+    return $user;
+}
+
+$user = createUser();
+$user->name = 'Updated'; // OK - writable due to &stdClass
+echo $user->name;`,
+        explanation: "Intersecting an object shape with `stdClass` (or another concrete class) makes the properties writable. Without this intersection, PHPStan treats object shape properties as read-only to maintain type safety."
+      },
+      {
+        language: 'php',
+        label: 'Complex Object Shapes with Lists',
+        code: `/**
+ * @return list<object{alr_text: string, alr_id: int}&stdClass>
+ */
+function getAlerts(): array {
+    return [
+        (object)['alr_text' => 'Warning', 'alr_id' => 1],
+        (object)['alr_text' => 'Error', 'alr_id' => 2],
+    ];
+}
+
+foreach (getAlerts() as $alert) {
+    // PHPStan knows $alert has alr_text (string) and alr_id (int)
+    echo "{$alert->alr_id}: {$alert->alr_text}";
+}`,
+        explanation: "You can combine object shapes with list types to represent collections of structured objects. This is common when working with database results that return stdClass objects with specific properties."
+      }
+    ],
+    quiz: {
+      question: "How do you make object shape properties writable?",
+      options: [
+        { text: "object{name: string, writable: true}", isCorrect: false, explanation: "There's no 'writable' property modifier in object shapes." },
+        { text: "object{name: string}&stdClass", isCorrect: true, explanation: "Intersecting with a concrete class like stdClass makes properties writable." },
+        { text: "object{name!: string}", isCorrect: false, explanation: "The '!' operator doesn't exist for object shapes." }
+      ]
+    }
+  },
+  {
     id: 'objects',
-    title: '4. Object & Class Types',
+    title: '5. Object & Class Types',
     content: (
       <>
         <P>Make your objects speak their real shape.</P>
@@ -433,7 +538,7 @@ function create(string $class): object {
   },
   {
     id: 'callables',
-    title: '5. Callable Types',
+    title: '6. Callable Types',
     content: (
       <>
         <P>Just saying <Code>callable</Code> is not enough. Document the signature.</P>
@@ -477,7 +582,7 @@ function process(callable $validator): void {
   },
   {
     id: 'generics',
-    title: '6. Generics',
+    title: '7. Generics',
     content: (
       <>
         <P>Static typing for dynamic collections.</P>
@@ -562,7 +667,7 @@ function treat(Collection $animals): void {
   },
   {
     id: 'enums',
-    title: '7. Constants & Enums',
+    title: '8. Constants & Enums',
     content: (
       <>
         <P>Avoid magic strings. Use literal types or constants.</P>
@@ -637,12 +742,45 @@ function assignRole(string $role): void {}
 assignRole('admin'); // OK
 assignRole('guest'); // PHPStan error`,
         explanation: "`key-of<self::ROLES>` tells PHPStan that `$role` must strictly be one of the keys defined in the `ROLES` constant array. If you add a new role to the array, the valid types are automatically updated."
+      },
+      {
+        language: 'php',
+        label: 'Constant Wildcards (All Constants)',
+        code: `class Permissions {
+    public const READ = 'read';
+    public const WRITE = 'write';
+    public const DELETE = 'delete';
+    public const ADMIN_READ = 'admin_read';
+    public const ADMIN_WRITE = 'admin_write';
+}
+
+/**
+ * @param Permissions::* $permission
+ */
+function checkPermission(string $permission): void {
+    // Accepts ANY constant from Permissions class
+    // 'read', 'write', 'delete', 'admin_read', 'admin_write'
+}
+
+/**
+ * @param Permissions::ADMIN_* $adminPermission
+ */
+function checkAdminPermission(string $adminPermission): void {
+    // Only accepts constants starting with ADMIN_
+    // 'admin_read', 'admin_write'
+}
+
+checkPermission(Permissions::READ); // OK
+checkPermission(Permissions::ADMIN_WRITE); // OK
+checkAdminPermission(Permissions::ADMIN_READ); // OK
+checkAdminPermission(Permissions::READ); // PHPStan error`,
+        explanation: "The wildcard syntax `Foo::*` accepts all constants from a class. You can also use prefixes like `Foo::ADMIN_*` to match only constants starting with that prefix. This is extremely useful for grouping related constants while maintaining type safety."
       }
     ]
   },
   {
     id: 'conditional',
-    title: '8. Conditional Types',
+    title: '9. Conditional Types',
     content: (
       <>
         <P>Sometimes types depend on values. PHPStan allows conditional return types.</P>
@@ -732,7 +870,7 @@ if (check($x) && someComplexCondition()) {
   },
   {
     id: 'reference',
-    title: '9. Pass-by-Reference',
+    title: '10. Pass-by-Reference',
     content: (
       <>
         <P>Stop guessing what happens to that <Code>&$var</Code>.</P>
@@ -774,7 +912,7 @@ function validate(array $input, array &$errors): bool {
   },
   {
     id: 'suppression',
-    title: '10. False Positive Suppression',
+    title: '11. False Positive Suppression',
     content: (
       <>
         <P>Sometimes static analysis is wrong. Suppress surgically.</P>
@@ -820,7 +958,7 @@ if (is_string($value)) { ... }`,
   },
   {
     id: 'best-practices',
-    title: '11. Contracts & Organization',
+    title: '12. Contracts & Organization',
     content: (
       <>
         <P>Make your types honest. Define strict contracts.</P>
@@ -869,7 +1007,7 @@ function calculate(int $val): int {
   },
   {
     id: 'cheatsheet',
-    title: '12. Cheatsheet',
+    title: '13. Cheatsheet',
     content: (
       <>
         <P>
@@ -899,6 +1037,14 @@ function calculate(int $val): int {
           <><Code>array-key</Code>: <Code>int|string</Code></>
         ]} />
 
+        <SubHeader>Object Shape Types</SubHeader>
+        <List items={[
+          <><Code>object{'{'}foo: int, bar: string{'}'}</Code>: Object with required properties</>,
+          <><Code>object{'{'}foo: int, bar?: string{'}'}</Code>: Object with optional property</>,
+          <><Code>object{'{'}foo: int{'}'}&stdClass</Code>: Writable object shape (intersected with class)</>,
+          <><Code>list&lt;object{'{'}id: int{'}'}&stdClass&gt;</Code>: List of object shapes</>
+        ]} />
+
         <SubHeader>Object, Class & Callable Types</SubHeader>
         <List items={[
           <><Code>object</Code>: Any object</>,
@@ -924,6 +1070,7 @@ function calculate(int $val): int {
         <List items={[
           <><Code>'a'|'b'</Code>: Literal values</>,
           <><Code>Class::CONST_*</Code>: All constants matching prefix</>,
+          <><Code>Foo::*</Code>: All constants on Foo</>,
           <><Code>key-of&lt;T&gt;</Code> / <Code>value-of&lt;T&gt;</Code>: Keys/Values of array</>,
           <><Code>@phpstan-assert T $v</Code>: Assert type after call</>,
           <><Code>@phpstan-assert-if-true T $v</Code>: Assert if returns true</>,
