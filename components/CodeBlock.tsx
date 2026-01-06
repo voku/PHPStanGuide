@@ -13,7 +13,6 @@ interface CodeBlockProps {
 const CodeBlock: React.FC<CodeBlockProps> = ({ code, label, explanation, playgroundUrl, className = '' }) => {
   const [showExplanation, setShowExplanation] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [runCopied, setRunCopied] = useState(false);
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(code);
@@ -30,7 +29,7 @@ const CodeBlock: React.FC<CodeBlockProps> = ({ code, label, explanation, playgro
 
   const finalPlaygroundUrl = getPlaygroundLink();
 
-  const handlePlaygroundClick = () => {
+  const handlePlaygroundClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
     // Auto-copy code when opening playground, ensuring it starts with <?php
     const cleanCode = code.trim();
     const runnableCode = cleanCode.startsWith('<?php') 
@@ -38,8 +37,16 @@ const CodeBlock: React.FC<CodeBlockProps> = ({ code, label, explanation, playgro
       : `<?php\n\n${cleanCode}`;
     
     navigator.clipboard.writeText(runnableCode);
-    setRunCopied(true);
-    setTimeout(() => setRunCopied(false), 3000);
+    
+    // Show confirmation dialog before opening the playground
+    e.preventDefault();
+    const confirmed = window.confirm(
+      "Code copied to clipboard!\n\nThe code has been automatically copied. Please paste it (Ctrl+V or Cmd+V) into the PHPStan playground.\n\nClick OK to open the playground."
+    );
+    
+    if (confirmed) {
+      window.open(finalPlaygroundUrl, '_blank', 'noopener,noreferrer');
+    }
   };
 
   return (
@@ -55,8 +62,7 @@ const CodeBlock: React.FC<CodeBlockProps> = ({ code, label, explanation, playgro
         </div>
         
         <div className="flex items-center gap-2">
-           <div className="relative group/run">
-             <a
+           <a
               href={finalPlaygroundUrl}
               target="_blank"
               rel="noopener noreferrer"
@@ -67,11 +73,6 @@ const CodeBlock: React.FC<CodeBlockProps> = ({ code, label, explanation, playgro
               Run
               <ExternalLink size={10} className="opacity-50" />
             </a>
-            {/* Tooltip for Copy Feedback */}
-            <div className={`absolute right-0 top-full mt-2 w-48 p-2 bg-slate-800 text-white text-xs rounded shadow-lg transition-opacity duration-200 pointer-events-none z-10 text-center ${runCopied ? 'opacity-100' : 'opacity-0'}`}>
-              Code copied to clipboard!
-            </div>
-           </div>
 
           <button 
             onClick={copyToClipboard}

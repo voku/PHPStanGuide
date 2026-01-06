@@ -10,7 +10,8 @@ import {
   X, 
   Moon, 
   Sun, 
-  GraduationCap
+  GraduationCap,
+  Github
 } from 'lucide-react';
 
 const App: React.FC = () => {
@@ -142,6 +143,17 @@ const App: React.FC = () => {
           </div>
           
           <div className="h-4 w-px bg-slate-200 dark:bg-slate-800 mx-1 hidden md:block"></div>
+
+          <a 
+            href="https://github.com/voku/PHPStanGuide"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hidden md:flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
+            aria-label="Contribute on GitHub"
+          >
+            <Github size={18} />
+            <span className="hidden lg:inline">Contribute</span>
+          </a>
 
           <button 
             onClick={() => setDarkMode(!darkMode)}
@@ -316,6 +328,17 @@ const App: React.FC = () => {
               <X size={24} />
             </button>
           </div>
+          
+          <a 
+            href="https://github.com/voku/PHPStanGuide"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-3 px-4 py-3 mb-4 text-sm font-medium text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors rounded-lg bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700"
+          >
+            <Github size={20} />
+            <span>Contribute on GitHub</span>
+          </a>
+          
           <TableOfContents isMobile={true} />
         </div>
       </div>
