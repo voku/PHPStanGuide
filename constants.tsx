@@ -843,7 +843,7 @@ public static function isValidEmail(?string $email): bool {
         language: 'php',
         label: 'Type Assertion Without Parameters (If-True)',
         code: `/**
- * Checks whether this user has a non-empty, simple-valid email.
+ * Checks whether this user has a non-empty, simply valid email.
  *
  * @phpstan-assert-if-true non-empty-string $this->email
  */
