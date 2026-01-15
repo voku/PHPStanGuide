@@ -841,6 +841,20 @@ public static function isValidEmail(?string $email): bool {
       },
       {
         language: 'php',
+        label: 'Type Assertion Without Parameters (If-True)',
+        code: `/**
+ * Checks whether this user has a non-empty, simply valid email.
+ *
+ * @phpstan-assert-if-true non-empty-string $this->email
+ */
+public function hasMail(): bool
+{
+    return self::isValidEmail($this->email);
+}`,
+        explanation: "You can use `@phpstan-assert-if-true` without method parameters by asserting on object properties like `$this->email`. This is particularly useful for validation methods that check the state of the current object. When this method returns true, PHPStan knows that `$this->email` is guaranteed to be a `non-empty-string`, enabling type-safe usage in subsequent code."
+      },
+      {
+        language: 'php',
         label: 'Negative Assertion (If-False)',
         code: `/**
  * @phpstan-assert-if-false int<min, 0> $score
