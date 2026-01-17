@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630">
+  <!-- Background gradient -->
+  <defs>
+    <linearGradient id="bg-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0f172a;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1e293b;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="accent-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#6366f1;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#8b5cf6;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bg-gradient)"/>
+  
+  <!-- Code pattern decoration (left side) -->
+  <g opacity="0.15">
+    <text x="50" y="100" font-family="monospace" font-size="14" fill="#6366f1">&lt;?php</text>
+    <text x="50" y="130" font-family="monospace" font-size="14" fill="#94a3b8">/**</text>
+    <text x="50" y="160" font-family="monospace" font-size="14" fill="#94a3b8"> * @param non-empty-string $name</text>
+    <text x="50" y="190" font-family="monospace" font-size="14" fill="#94a3b8"> * @return list&lt;int&gt;</text>
+    <text x="50" y="220" font-family="monospace" font-size="14" fill="#94a3b8"> */</text>
+    <text x="50" y="250" font-family="monospace" font-size="14" fill="#e2e8f0">function process($name)</text>
+  </g>
+  
+  <!-- Terminal/code icon -->
+  <rect x="80" y="380" width="160" height="120" rx="8" fill="#1e293b" stroke="#334155" stroke-width="2"/>
+  <line x1="95" y1="405" x2="125" y2="435" stroke="#6366f1" stroke-width="3" stroke-linecap="round"/>
+  <line x1="125" y1="435" x2="95" y2="465" stroke="#6366f1" stroke-width="3" stroke-linecap="round"/>
+  <line x1="145" y1="465" x2="205" y2="465" stroke="#8b5cf6" stroke-width="3" stroke-linecap="round"/>
+  
+  <!-- Main content -->
+  <g>
+    <!-- Title -->
+    <text x="320" y="260" font-family="sans-serif" font-size="68" font-weight="700" fill="#ffffff">
+      PHPStan Guide
+    </text>
+    
+    <!-- Subtitle with gradient -->
+    <text x="320" y="330" font-family="sans-serif" font-size="36" font-weight="500" fill="url(#accent-gradient)">
+      The PHPDoc Guide 2026 Edition
+    </text>
+    
+    <!-- Description -->
+    <text x="320" y="400" font-family="sans-serif" font-size="24" font-weight="400" fill="#cbd5e1">
+      Master PHPStan pseudo-types and modern PHP type safety
+    </text>
+    
+    <!-- Feature badges -->
+    <g transform="translate(320, 450)">
+      <rect width="160" height="40" rx="20" fill="#1e293b" stroke="#334155" stroke-width="1.5"/>
+      <text x="80" y="27" font-family="sans-serif" font-size="16" font-weight="500" fill="#94a3b8" text-anchor="middle">
+        Interactive
+      </text>
+    </g>
+    
+    <g transform="translate(500, 450)">
+      <rect width="160" height="40" rx="20" fill="#1e293b" stroke="#334155" stroke-width="1.5"/>
+      <text x="80" y="27" font-family="sans-serif" font-size="16" font-weight="500" fill="#94a3b8" text-anchor="middle">
+        TypeScript + React
+      </text>
+    </g>
+    
+    <g transform="translate(680, 450)">
+      <rect width="160" height="40" rx="20" fill="#1e293b" stroke="#334155" stroke-width="1.5"/>
+      <text x="80" y="27" font-family="sans-serif" font-size="16" font-weight="500" fill="#94a3b8" text-anchor="middle">
+        PHP Static Analysis
+      </text>
+    </g>
+  </g>
+  
+  <!-- URL/Footer -->
+  <text x="600" y="580" font-family="sans-serif" font-size="18" font-weight="400" fill="#64748b" text-anchor="middle">
+    voku.github.io/PHPStanGuide
+  </text>
+</svg>
