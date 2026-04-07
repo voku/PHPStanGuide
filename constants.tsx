@@ -1223,11 +1223,11 @@ export const PHPSTAN_TYPE_CATEGORIES: GuideExportTypeCategory[] = [
 export const PHPSTAN_BEST_PRACTICES: GuideExportBestPractice[] = [
   {
     title: 'Native Types First',
-    description: "Don't duplicate native PHP types in docblocks unless the docblock is refining them."
+    description: "Don't duplicate native PHP types in PHPDoc blocks unless the annotation is refining them."
   },
   {
     title: 'Prefer Precise Arrays',
-    description: "Use array shapes like array{...}, lists, or DTOs instead of a bare array."
+    description: "Use array shapes like array{...}, lists, or DTOs instead of a generic array type."
   },
   {
     title: 'Document Checked Exceptions',
