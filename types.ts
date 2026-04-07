@@ -54,6 +54,7 @@ export interface GuideExportPayload {
   title: string;
   description: string;
   generatedFrom: string;
+  exportedAt?: string;
   bestPractices: GuideExportBestPractice[];
   typeCategories: GuideExportTypeCategory[];
   allTypes: string[];
