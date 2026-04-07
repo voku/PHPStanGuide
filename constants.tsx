@@ -1227,7 +1227,7 @@ export const PHPSTAN_BEST_PRACTICES: GuideExportBestPractice[] = [
   },
   {
     title: 'Prefer Precise Arrays',
-    description: "Use array shapes like array{...}, lists, or DTOs instead of a generic array type."
+    description: "Use array shapes like array{key: Type}, lists, or DTOs instead of a generic array type."
   },
   {
     title: 'Document Checked Exceptions',

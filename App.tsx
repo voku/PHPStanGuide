@@ -15,6 +15,9 @@ import {
   Download
 } from 'lucide-react';
 
+const EXPORT_STATUS_RESET_DELAY = 2000;
+const JSON_INDENT_SPACES = 2;
+
 const App: React.FC = () => {
   // --- State ---
   const [darkMode, setDarkMode] = useState(false);
@@ -145,7 +148,7 @@ const App: React.FC = () => {
     exportResetTimeoutRef.current = window.setTimeout(() => {
       exportResetTimeoutRef.current = null;
       setExportStatus('idle');
-    }, 2000);
+    }, EXPORT_STATUS_RESET_DELAY);
   };
 
   const getExportButtonLabel = () => {
@@ -166,7 +169,7 @@ const App: React.FC = () => {
         exportedAt: new Date().toISOString()
       },
       null,
-      2
+      JSON_INDENT_SPACES
     );
 
     try {
