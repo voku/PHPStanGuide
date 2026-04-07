@@ -152,7 +152,7 @@ function runQuery(string $sqlQuery): void {
 
 runQuery("SELECT * FROM users"); // OK
 runQuery($_GET['query']); // PHPStan error`,
-        explanation: "`literal-string` acts as a security firewall. It ensures the query string is written by the developer (hardcoded) and not constructed from untrusted user input variables. This effectively neutralizes many SQL injection vectors before the code even runs."
+        explanation: "`literal-string` helps ensure the SQL fragment is authored in code instead of assembled from untrusted input. That's useful for constraining dangerous dynamic query building, but it still does not replace parameterized queries for user-supplied values."
       },
       {
         language: 'php',
@@ -184,10 +184,10 @@ getConfig('other_key'); // PHPStan error`,
       }
     ],
     quiz: {
-      question: "Which type is best for preventing SQL injection in a raw query function?",
+      question: "Which type is best for restricting a raw query argument to developer-authored strings?",
       options: [
         { text: "string", isCorrect: false, explanation: "Native string allows any input, including malicious user data." },
-        { text: "literal-string", isCorrect: true, explanation: "It forces the input to be a compile-time constant, blocking dynamic user input." },
+        { text: "literal-string", isCorrect: true, explanation: "It restricts the argument to compile-time strings, which reduces risk from dynamic input, though you still need parameterized queries for values." },
         { text: "non-empty-string", isCorrect: false, explanation: "User input can be non-empty but still malicious." }
       ]
     }
@@ -607,7 +607,7 @@ function process(callable $validator): void {
  */
 class Collection {
     /** @var list<T> */
-    private array $items = [];
+    protected array $items = [];
 
     /** @param T $item */
     public function add($item): void {
@@ -933,7 +933,7 @@ function validate(array $input, array &$errors): bool {
         <List items={[
           <><Code>@phpstan-ignore-next-line</Code>: Use sparingly.</>,
           <><Code>@phpstan-ignore-line</Code>: Inline on same line.</>,
-          <><Code>@phpstan-ignore-error Identifier</Code>: The best way. Ignores only specific error types.</>
+          <><Code>@phpstan-ignore error.identifier</Code>: Preferred. Ignores only the named error identifier.</>
         ]} />
         <SubHeader>The Baseline Workflow</SubHeader>
         <P>
@@ -950,9 +950,9 @@ function validate(array $input, array &$errors): bool {
       {
         language: 'php',
         label: 'Surgical Suppression',
-        code: `/** @phpstan-ignore-error function.alreadyNarrowedType */
+        code: `// @phpstan-ignore function.alreadyNarrowedType (intentional guard for legacy flow)
 if (is_string($value)) { ... }`,
-        explanation: "Instead of ignoring the whole line (which might hide real bugs), this annotation ignores only the specific error ID `function.alreadyNarrowedType`. This allows you to bypass a specific false positive while keeping all other strict checks active."
+        explanation: "Instead of ignoring every problem on the line, `@phpstan-ignore function.alreadyNarrowedType` targets one known identifier. That keeps the suppression narrow and lets PHPStan continue reporting unrelated issues nearby."
       },
       {
         language: 'yaml',
@@ -980,7 +980,7 @@ if (is_string($value)) { ... }`,
           <><Strong>Native Types First</Strong>: Don't duplicate native types in docblocks unless refining them.</>,
           <><Strong>Precise Arrays</Strong>: Use <Code>array{'{'}...{'}'}</Code> shapes or DTOs, not <Code>array</Code>.</>,
           <><Strong>Checked Exceptions</Strong>: Use <Code>@throws</Code> to enforce error handling logic.</>,
-          <><Strong>Purity</Strong>: <Code>@pure</Code> guarantees no side-effects (no I/O, no global writes).</>
+          <><Strong>Purity</Strong>: <Code>@phpstan-pure</Code> marks functions with no side-effects (no I/O, no global writes).</>
         ]} />
         <SubHeader>Type Organization</SubHeader>
         <P>
@@ -1008,14 +1008,14 @@ class UserDTO {
         language: 'php',
         label: 'Checked Exceptions & Purity',
         code: `/**
- * @pure
+ * @phpstan-pure
  * @throws InvalidArgumentException
  */
 function calculate(int $val): int {
     if ($val < 0) throw new InvalidArgumentException();
     return $val * 2;
 }`,
-        explanation: "`@throws` turns PHP's loose exceptions into Checked Exceptions, forcing callers to catch them or redeclare them. `@pure` tells PHPStan this function has no side effects (doesn't touch DB, globals, or IO), allowing for aggressive optimizations and dead-code removal."
+        explanation: "`@throws` turns PHP's loose exceptions into checked contracts, forcing callers to handle or redeclare failures. `@phpstan-pure` tells PHPStan the function has no side effects, which improves reasoning about repeated calls and dead code."
       }
     ]
   },
@@ -1065,7 +1065,7 @@ function calculate(int $val): int {
           <><Code>self</Code>: Current class (not child)</>,
           <><Code>$this</Code>: Instance of calling class</>,
           <><Code>static</Code>: Late static binding return</>,
-          <><Code>callable(A): R</Code>: Callable signature</>,
+          <><Code>callable(int, string): bool</Code>: Callable signature</>,
           <><Code>A & B</Code>: Intersection (must be A AND B)</>,
           <><Code>A | B</Code>: Union (A or B)</>
         ]} />
@@ -1076,7 +1076,7 @@ function calculate(int $val): int {
           <><Code>@template T of Foo</Code>: Restrict T to subtype of Foo</>,
           <><Code>@extends Base&lt;T&gt;</Code>: Specifies type T for parent</>,
           <><Code>@implements I&lt;T&gt;</Code>: Specifies type T for interface</>,
-          <><Code>@phpstan-type Alias Type</Code>: Alias for complex types</>,
+          <><Code>@phpstan-type UserData array{id: int, name: string}</Code>: Alias for complex types</>,
           <><Code>@phpstan-import-type</Code>: Import alias from another scope</>
         ]} />
 
@@ -1085,19 +1085,20 @@ function calculate(int $val): int {
           <><Code>'a'|'b'</Code>: Literal values</>,
           <><Code>Class::CONST_*</Code>: All constants matching prefix</>,
           <><Code>Foo::*</Code>: All constants on Foo</>,
-          <><Code>key-of&lt;T&gt;</Code> / <Code>value-of&lt;T&gt;</Code>: Keys/Values of array</>,
+          <><Code>key-of&lt;Foo::TYPES&gt;</Code>: Union of valid array keys</>,
+          <><Code>value-of&lt;Foo::TYPES&gt;</Code>: Union of valid array values</>,
           <><Code>@phpstan-assert T $v</Code>: Assert type after call</>,
           <><Code>@phpstan-assert-if-true T $v</Code>: Assert if returns true</>,
           <><Code>@phpstan-assert-if-false T $v</Code>: Assert if returns false</>,
-          <><Code>@return (A?B:C)</Code>: Conditional return type</>,
+          <><Code>@return ($asFloat is true ? float : string)</Code>: Conditional return type</>,
           <><Code>@param-out T $v</Code>: Type after function finishes</>,
           <><Code>@throws T</Code>: Declares checked exception</>,
-          <><Code>@pure</Code>: Marks function as side-effect free</>
+          <><Code>@phpstan-pure</Code>: Marks function as side-effect free</>
         ]} />
 
         <SubHeader>Suppression</SubHeader>
         <List items={[
-          <><Code>@phpstan-ignore-error Id</Code>: Ignore specific error (Best)</>,
+          <><Code>@phpstan-ignore error.identifier</Code>: Ignore a specific error identifier</>,
           <><Code>@phpstan-ignore-next-line</Code>: Ignore next line</>,
           <><Code>@phpstan-ignore-line</Code>: Ignore current line</>
         ]} />
@@ -1127,7 +1128,7 @@ class MasterCheatsheet {
      * @throws RuntimeException
      */
     public function query(string $key, int $count, string $order): array {
-        // ... implementation
+        return [];
     }
 }`,
         explanation: "This snippet combines almost everything: Generics (`@template`), Type Aliases (`@phpstan-type`), Strict Scalars (`non-empty-string`, `positive-int`), Literals (`'asc'|'desc'`), Conditional Return Types, and Checked Exceptions (`@throws`). Copy this to test your PHPStan configuration!"
@@ -1178,7 +1179,7 @@ export const PHPSTAN_TYPE_CATEGORIES: GuideExportTypeCategory[] = [
       { type: 'self', description: 'Current class, excluding child overrides' },
       { type: '$this', description: 'Current instance type for fluent APIs' },
       { type: 'static', description: 'Late static binding return type' },
-      { type: 'callable(A): R', description: 'Callable signature' },
+      { type: 'callable(int, string): bool', description: 'Callable signature' },
       { type: 'A & B', description: 'Intersection type: must satisfy both' },
       { type: 'A | B', description: 'Union type: may satisfy either' }
     ]
@@ -1190,7 +1191,7 @@ export const PHPSTAN_TYPE_CATEGORIES: GuideExportTypeCategory[] = [
       { type: '@template T of Foo', description: 'Constrain T to a subtype of Foo' },
       { type: '@extends Base<T>', description: 'Specify the generic parent type' },
       { type: '@implements I<T>', description: 'Specify the generic interface type' },
-      { type: '@phpstan-type Alias Type', description: 'Create a reusable type alias' },
+      { type: '@phpstan-type UserData array{id: int, name: string}', description: 'Create a reusable type alias' },
       { type: '@phpstan-import-type', description: 'Import a type alias from another scope' }
     ]
   },
@@ -1200,20 +1201,21 @@ export const PHPSTAN_TYPE_CATEGORIES: GuideExportTypeCategory[] = [
       { type: "'a'|'b'", description: 'Literal union of allowed values' },
       { type: 'Class::CONST_*', description: 'All constants matching a prefix' },
       { type: 'Foo::*', description: 'All constants on a class or enum' },
-      { type: 'key-of<T> / value-of<T>', description: 'Keys or values of an array-like definition' },
+      { type: 'key-of<Foo::TYPES>', description: 'Keys of an array constant or enum-backed definition' },
+      { type: 'value-of<Foo::TYPES>', description: 'Values of an array constant or enum-backed definition' },
       { type: '@phpstan-assert T $v', description: 'Assert the type after a call' },
       { type: '@phpstan-assert-if-true T $v', description: 'Assert the type when the call returns true' },
       { type: '@phpstan-assert-if-false T $v', description: 'Assert the type when the call returns false' },
-      { type: '@return (A?B:C)', description: 'Conditional return type' },
+      { type: '@return ($asFloat is true ? float : string)', description: 'Conditional return type based on an input value' },
       { type: '@param-out T $v', description: 'Type of a by-reference parameter after the call' },
       { type: '@throws T', description: 'Declare checked exceptions' },
-      { type: '@pure', description: 'Mark a function as side-effect free' }
+      { type: '@phpstan-pure', description: 'Mark a function as side-effect free' }
     ]
   },
   {
     title: 'Suppression',
     types: [
-      { type: '@phpstan-ignore-error Id', description: 'Ignore a specific error identifier' },
+      { type: '@phpstan-ignore error.identifier', description: 'Ignore a specific error identifier' },
       { type: '@phpstan-ignore-next-line', description: 'Ignore the next line' },
       { type: '@phpstan-ignore-line', description: 'Ignore the current line' }
     ]
@@ -1235,7 +1237,7 @@ export const PHPSTAN_BEST_PRACTICES: GuideExportBestPractice[] = [
   },
   {
     title: 'Mark Pure Functions',
-    description: 'Use @pure only when a function has no side effects such as IO, global writes, or database calls.'
+    description: 'Use @phpstan-pure only when a function has no side effects such as IO, global writes, or database calls.'
   },
   {
     title: 'Refactor Complex Shapes',
