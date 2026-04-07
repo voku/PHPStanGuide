@@ -27,6 +27,40 @@ export interface GuideSection {
   quiz?: MicroQuiz;
 }
 
+export interface GuideExportTypeEntry {
+  type: string;
+  description: string;
+}
+
+export interface GuideExportTypeCategory {
+  title: string;
+  types: GuideExportTypeEntry[];
+}
+
+export interface GuideExportBestPractice {
+  title: string;
+  description: string;
+}
+
+export interface GuideExportExample {
+  sectionId: string;
+  sectionTitle: string;
+  label: string;
+  code: string;
+  explanation?: string;
+}
+
+export interface GuideExportPayload {
+  title: string;
+  description: string;
+  generatedFrom: string;
+  exportedAt?: string;
+  bestPractices: GuideExportBestPractice[];
+  typeCategories: GuideExportTypeCategory[];
+  allTypes: string[];
+  examples: GuideExportExample[];
+}
+
 export interface UserState {
   xp: number;
   readSections: string[]; 

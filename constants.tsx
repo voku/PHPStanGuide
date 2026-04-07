@@ -1,5 +1,5 @@
 import React from 'react';
-import { GuideSection } from './types';
+import { GuideExportBestPractice, GuideExportPayload, GuideExportTypeCategory, GuideSection } from './types';
 
 // Helper components for consistent styling within the content
 const P = ({ children }: { children?: React.ReactNode }) => (
@@ -1135,3 +1135,132 @@ class MasterCheatsheet {
     ]
   }
 ];
+
+export const PHPSTAN_TYPE_CATEGORIES: GuideExportTypeCategory[] = [
+  {
+    title: 'Scalar & Refined Pseudo-Types',
+    types: [
+      { type: 'non-empty-string', description: "String that's never ''" },
+      { type: 'numeric-string', description: 'String that parses to a number' },
+      { type: 'literal-string', description: 'String known at compile time' },
+      { type: 'positive-int', description: 'Integer > 0' },
+      { type: 'non-negative-int', description: 'Integer >= 0' },
+      { type: 'int<min, max>', description: 'Integer constrained to a range' },
+      { type: 'class-string<T>', description: 'Fully qualified class name for T' },
+      { type: 'callable-string', description: 'String name of a global callable' }
+    ]
+  },
+  {
+    title: 'Array & List Types',
+    types: [
+      { type: 'list<T>', description: '0-based sequential array' },
+      { type: 'non-empty-list<T>', description: 'List with at least one element' },
+      { type: 'array<K, V>', description: 'Associative array / map' },
+      { type: 'non-empty-array<K, V>', description: 'Associative array with at least one element' },
+      { type: 'array{key: T}', description: 'Structured array with required keys' },
+      { type: 'array{key?: T}', description: 'Structured array with optional keys' },
+      { type: 'array-key', description: 'int|string' }
+    ]
+  },
+  {
+    title: 'Object Shape Types',
+    types: [
+      { type: 'object{foo: int, bar: string}', description: 'Object with required properties' },
+      { type: 'object{foo: int, bar?: string}', description: 'Object with optional property' },
+      { type: 'object{foo: int}&stdClass', description: 'Writable object shape intersected with stdClass' },
+      { type: 'list<object{id: int}&stdClass>', description: 'List of writable object shapes' }
+    ]
+  },
+  {
+    title: 'Object, Class & Callable Types',
+    types: [
+      { type: 'object', description: 'Any object' },
+      { type: 'self', description: 'Current class, excluding child overrides' },
+      { type: '$this', description: 'Current instance type for fluent APIs' },
+      { type: 'static', description: 'Late static binding return type' },
+      { type: 'callable(A): R', description: 'Callable signature' },
+      { type: 'A & B', description: 'Intersection type: must satisfy both' },
+      { type: 'A | B', description: 'Union type: may satisfy either' }
+    ]
+  },
+  {
+    title: 'Generics & Reusability',
+    types: [
+      { type: '@template T', description: 'Declare a generic type variable' },
+      { type: '@template T of Foo', description: 'Constrain T to a subtype of Foo' },
+      { type: '@extends Base<T>', description: 'Specify the generic parent type' },
+      { type: '@implements I<T>', description: 'Specify the generic interface type' },
+      { type: '@phpstan-type Alias Type', description: 'Create a reusable type alias' },
+      { type: '@phpstan-import-type', description: 'Import a type alias from another scope' }
+    ]
+  },
+  {
+    title: 'Constraints & Logic',
+    types: [
+      { type: "'a'|'b'", description: 'Literal union of allowed values' },
+      { type: 'Class::CONST_*', description: 'All constants matching a prefix' },
+      { type: 'Foo::*', description: 'All constants on a class or enum' },
+      { type: 'key-of<T> / value-of<T>', description: 'Keys or values of an array-like definition' },
+      { type: '@phpstan-assert T $v', description: 'Assert the type after a call' },
+      { type: '@phpstan-assert-if-true T $v', description: 'Assert the type when the call returns true' },
+      { type: '@phpstan-assert-if-false T $v', description: 'Assert the type when the call returns false' },
+      { type: '@return (A?B:C)', description: 'Conditional return type' },
+      { type: '@param-out T $v', description: 'Type of a by-reference parameter after the call' },
+      { type: '@throws T', description: 'Declare checked exceptions' },
+      { type: '@pure', description: 'Mark a function as side-effect free' }
+    ]
+  },
+  {
+    title: 'Suppression',
+    types: [
+      { type: '@phpstan-ignore-error Id', description: 'Ignore a specific error identifier' },
+      { type: '@phpstan-ignore-next-line', description: 'Ignore the next line' },
+      { type: '@phpstan-ignore-line', description: 'Ignore the current line' }
+    ]
+  }
+];
+
+export const PHPSTAN_BEST_PRACTICES: GuideExportBestPractice[] = [
+  {
+    title: 'Native Types First',
+    description: "Don't duplicate native PHP types in PHPDoc blocks unless the annotation is refining them."
+  },
+  {
+    title: 'Prefer Precise Arrays',
+    description: "Use array shapes like array{key: Type}, lists, or DTOs instead of a generic array type."
+  },
+  {
+    title: 'Document Checked Exceptions',
+    description: 'Use @throws to make error handling contracts explicit.'
+  },
+  {
+    title: 'Mark Pure Functions',
+    description: 'Use @pure only when a function has no side effects such as IO, global writes, or database calls.'
+  },
+  {
+    title: 'Refactor Complex Shapes',
+    description: 'Move large array shapes into @phpstan-type aliases or dedicated DTO/value objects.'
+  },
+  {
+    title: 'Treat PHPDocs as Contracts',
+    description: "Write the most specific type you mean, and rely on PHPStan to enforce it instead of team convention."
+  }
+];
+
+export const GUIDE_EXPORT_DATA: GuideExportPayload = {
+  title: 'PHPStan Guide JSON Export',
+  description: 'Best practices, examples, and PHPStan type reference data for copy/paste into LLM workflows.',
+  generatedFrom: 'https://github.com/voku/PHPStanGuide',
+  bestPractices: PHPSTAN_BEST_PRACTICES,
+  typeCategories: PHPSTAN_TYPE_CATEGORIES,
+  allTypes: PHPSTAN_TYPE_CATEGORIES.flatMap((category) => category.types.map((entry) => entry.type)),
+  examples: GUIDE_SECTIONS.flatMap((section) =>
+    section.codeBlocks.map((block) => ({
+      sectionId: section.id,
+      sectionTitle: section.title,
+      label: block.label ?? 'PHP',
+      code: block.code,
+      explanation: typeof block.explanation === 'string' ? block.explanation : undefined
+    }))
+  )
+};
