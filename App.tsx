@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { GUIDE_EXPORT_DATA, GUIDE_SECTIONS } from './constants';
 import { GuideSection, UserState } from './types';
 import CodeBlock from './components/CodeBlock';
@@ -21,6 +21,7 @@ const App: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
   const [exportStatus, setExportStatus] = useState<'idle' | 'copied' | 'downloaded'>('idle');
+  const exportResetTimeoutRef = useRef<number | null>(null);
   const [userState, setUserState] = useState<UserState>(() => {
     const saved = localStorage.getItem('phpstan_hero_state_v3');
     return saved ? JSON.parse(saved) : {
@@ -43,6 +44,14 @@ const App: React.FC = () => {
   useEffect(() => {
     localStorage.setItem('phpstan_hero_state_v3', JSON.stringify(userState));
   }, [userState]);
+
+  useEffect(() => {
+    return () => {
+      if (exportResetTimeoutRef.current !== null) {
+        window.clearTimeout(exportResetTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // Track both active section AND detailed scroll percentage
   useEffect(() => {
@@ -117,6 +126,28 @@ const App: React.FC = () => {
     return Math.round((completed / total) * 100);
   };
 
+  const downloadJsonExport = (json: string) => {
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'phpstan-guide-export.json';
+    link.click();
+    URL.revokeObjectURL(url);
+    setExportStatus('downloaded');
+  };
+
+  const scheduleExportStatusReset = () => {
+    if (exportResetTimeoutRef.current !== null) {
+      window.clearTimeout(exportResetTimeoutRef.current);
+    }
+
+    exportResetTimeoutRef.current = window.setTimeout(() => {
+      setExportStatus('idle');
+      exportResetTimeoutRef.current = null;
+    }, 2000);
+  };
+
   const handleExportJson = async () => {
     const json = JSON.stringify(
       {
@@ -132,27 +163,13 @@ const App: React.FC = () => {
         await navigator.clipboard.writeText(json);
         setExportStatus('copied');
       } else {
-        const blob = new Blob([json], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = 'phpstan-guide-export.json';
-        link.click();
-        URL.revokeObjectURL(url);
-        setExportStatus('downloaded');
+        downloadJsonExport(json);
       }
     } catch {
-      const blob = new Blob([json], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = 'phpstan-guide-export.json';
-      link.click();
-      URL.revokeObjectURL(url);
-      setExportStatus('downloaded');
+      downloadJsonExport(json);
     }
 
-    window.setTimeout(() => setExportStatus('idle'), 2000);
+    scheduleExportStatusReset();
   };
 
   const ExportJsonButton = ({ className = '', fullWidth = false }: { className?: string; fullWidth?: boolean }) => (
