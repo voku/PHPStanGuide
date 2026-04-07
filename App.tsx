@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { GUIDE_SECTIONS } from './constants';
+import { GUIDE_EXPORT_DATA, GUIDE_SECTIONS } from './constants';
 import { GuideSection, UserState } from './types';
 import CodeBlock from './components/CodeBlock';
 import { 
@@ -11,7 +11,8 @@ import {
   Moon, 
   Sun, 
   GraduationCap,
-  Github
+  Github,
+  Download
 } from 'lucide-react';
 
 const App: React.FC = () => {
@@ -19,6 +20,7 @@ const App: React.FC = () => {
   const [darkMode, setDarkMode] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
+  const [exportStatus, setExportStatus] = useState<'idle' | 'copied' | 'downloaded'>('idle');
   const [userState, setUserState] = useState<UserState>(() => {
     const saved = localStorage.getItem('phpstan_hero_state_v3');
     return saved ? JSON.parse(saved) : {
@@ -115,6 +117,56 @@ const App: React.FC = () => {
     return Math.round((completed / total) * 100);
   };
 
+  const handleExportJson = async () => {
+    const json = JSON.stringify(
+      {
+        ...GUIDE_EXPORT_DATA,
+        exportedAt: new Date().toISOString()
+      },
+      null,
+      2
+    );
+
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(json);
+        setExportStatus('copied');
+      } else {
+        const blob = new Blob([json], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'phpstan-guide-export.json';
+        link.click();
+        URL.revokeObjectURL(url);
+        setExportStatus('downloaded');
+      }
+    } catch {
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'phpstan-guide-export.json';
+      link.click();
+      URL.revokeObjectURL(url);
+      setExportStatus('downloaded');
+    }
+
+    window.setTimeout(() => setExportStatus('idle'), 2000);
+  };
+
+  const ExportJsonButton = ({ className = '', fullWidth = false }: { className?: string; fullWidth?: boolean }) => (
+    <button
+      onClick={handleExportJson}
+      className={`flex items-center justify-center gap-2 px-3 py-1.5 text-sm font-medium rounded-lg transition-colors border border-slate-200 dark:border-slate-700 bg-slate-50 hover:bg-slate-100 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 ${fullWidth ? 'w-full' : ''} ${className}`}
+      aria-label="Export guide as JSON"
+      title="Export the guide data as JSON"
+    >
+      <Download size={16} />
+      <span>{exportStatus === 'copied' ? 'JSON Copied' : exportStatus === 'downloaded' ? 'JSON Downloaded' : 'Export JSON'}</span>
+    </button>
+  );
+
   // --- Components ---
   const Navbar = () => (
     <header className="fixed top-0 left-0 right-0 z-50 transition-all duration-300 bg-white/95 dark:bg-[#0f172a]/95 backdrop-blur-md shadow-sm border-b border-slate-200/50 dark:border-slate-800/50">
@@ -154,6 +206,8 @@ const App: React.FC = () => {
             <Github size={18} />
             <span className="hidden lg:inline">Contribute</span>
           </a>
+
+          <ExportJsonButton className="hidden md:flex" />
 
           <button 
             onClick={() => setDarkMode(!darkMode)}
@@ -338,6 +392,8 @@ const App: React.FC = () => {
             <Github size={20} />
             <span>Contribute on GitHub</span>
           </a>
+
+          <ExportJsonButton fullWidth className="mb-4" />
           
           <TableOfContents isMobile={true} />
         </div>
