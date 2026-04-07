@@ -1076,7 +1076,7 @@ function calculate(int $val): int {
           <><Code>@template T of Foo</Code>: Restrict T to subtype of Foo</>,
           <><Code>@extends Base&lt;T&gt;</Code>: Specifies type T for parent</>,
           <><Code>@implements I&lt;T&gt;</Code>: Specifies type T for interface</>,
-          <><Code>@phpstan-type UserData array{id: int, name: string}</Code>: Alias for complex types</>,
+          <><Code>@phpstan-type UserData array{'{'}id: int, name: string{'}'}</Code>: Alias for complex types</>,
           <><Code>@phpstan-import-type</Code>: Import alias from another scope</>
         ]} />
 
