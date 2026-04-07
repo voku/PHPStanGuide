@@ -143,9 +143,20 @@ const App: React.FC = () => {
     }
 
     exportResetTimeoutRef.current = window.setTimeout(() => {
-      setExportStatus('idle');
       exportResetTimeoutRef.current = null;
+      setExportStatus('idle');
     }, 2000);
+  };
+
+  const getExportButtonLabel = () => {
+    switch (exportStatus) {
+      case 'copied':
+        return 'JSON Copied';
+      case 'downloaded':
+        return 'JSON Downloaded';
+      default:
+        return 'Export JSON';
+    }
   };
 
   const handleExportJson = async () => {
@@ -180,7 +191,7 @@ const App: React.FC = () => {
       title="Export the guide data as JSON"
     >
       <Download size={16} />
-      <span>{exportStatus === 'copied' ? 'JSON Copied' : exportStatus === 'downloaded' ? 'JSON Downloaded' : 'Export JSON'}</span>
+      <span>{getExportButtonLabel()}</span>
     </button>
   );
 
