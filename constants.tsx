@@ -368,6 +368,16 @@ encodeJson($data, 999); // PHPStan error: not a valid bitmask`,
           <><Code>array&lt;Key, Value&gt;</Code>: Associative map (e.g. <Code>array&lt;string, User&gt;</Code>).</>,
           <><Code>array{'{'}key: T, ...{'}'}</Code>: Defined shape (like a struct).</>
         ]} />
+        <SubHeader>Offset Access Types</SubHeader>
+        <P>
+          PHPStan can extract the type of a specific key from an array shape using bracket notation.
+          This is particularly powerful when combined with <Code>key-of&lt;T&gt;</Code> and generics:
+        </P>
+        <List items={[
+          <><Code>MyArray['bar']</Code>: Returns the type of key <Code>'bar'</Code> in a <Code>@phpstan-type</Code> alias.</>,
+          <><Code>T[K]</Code>: Returns the type of key <Code>K</Code> in a generic array type <Code>T</Code>.</>,
+          <><Code>key-of&lt;T&gt;</Code>: Union of all valid keys in <Code>T</Code>.</>
+        ]} />
       </>
     ),
     codeBlocks: [
@@ -426,6 +436,44 @@ function processUser(array $user): void {
     }
 }`,
         explanation: "This distinguishes between an *optional key* (`key?: type`) and a *nullable value* (`key: type|null`). Optional keys might cause 'Undefined Array Key' errors if accessed directly, whereas nullable keys always exist but might hold `null`. Use `??` for optional keys and strict `null` checks for nullable values."
+      },
+      {
+        language: 'php',
+        label: 'Offset Access (T[K] & MyArray[\'key\'])',
+        code: `/**
+ * @phpstan-type UserRow array{id: int, name: string, email: string}
+ */
+class UserTable
+{
+    /**
+     * @return UserRow['email']   // resolves to 'string'
+     */
+    public function getEmail(int $userId): string
+    {
+        return ''; // PHPStan knows this must be a string
+    }
+}
+
+/**
+ * @template T of array<string, mixed>
+ */
+trait AttributeTrait
+{
+    /**
+     * @template K of key-of<T>
+     * @param K     $key
+     * @param T[K]  $value   // type of the value at key K
+     */
+    public function set(string $key, mixed $value): void {}
+
+    /**
+     * @template K of key-of<T>
+     * @param K $key
+     * @return T[K]|null
+     */
+    public function get(string $key): mixed { return null; }
+}`,
+        explanation: "Offset access (`T[K]`) extracts the type of a specific key from a generic array type at the PHPDoc level. Combined with `key-of<T>` and templates it creates strongly-typed attribute/property bags where PHPStan knows the exact return type of `get('name')` without any extra type assertions."
       }
     ],
     quiz: {
