@@ -117,11 +117,20 @@ export const GUIDE_SECTIONS: GuideSection[] = [
         <SubHeader>Key Types</SubHeader>
         <List items={[
           <><Code>non-empty-string</Code>: A string that cannot be <Code>''</Code>.</>,
+          <><Code>non-falsy-string</Code> (alias <Code>truthy-string</Code>): Any string that is <Code>true</Code> after casting to bool — excludes <Code>''</Code> and <Code>'0'</Code>.</>,
           <><Code>numeric-string</Code>: Guaranteed to represent a number ("123.45").</>,
           <><Code>literal-string</Code>: A string known at compile-time (no user input).</>,
+          <><Code>lowercase-string</Code>: A string where <Code>strtolower($s) === $s</Code>.</>,
+          <><Code>uppercase-string</Code>: A string where <Code>strtoupper($s) === $s</Code>.</>,
+          <><Code>decimal-int-string</Code>: A string that is a decimal integer and is cast to <Code>int</Code> as an array key (e.g. <Code>'0'</Code>, <Code>'123'</Code>, <Code>'-1'</Code>).</>,
+          <><Code>non-decimal-int-string</Code>: A string that stays a string as an array key (e.g. <Code>'+1'</Code>, <Code>'00'</Code>, <Code>'foo'</Code>).</>,
           <><Code>class-string&lt;T&gt;</Code>: A fully-qualified class name.</>,
-          <><Code>callable-string</Code>: A string name of a globally callable function.</>
+          <><Code>callable-string</Code>: Any string that PHP considers a valid callable.</>
         ]} />
+        <SubHeader>Combined Forms</SubHeader>
+        <P>
+          The non-empty, case, and literal modifiers can be combined, e.g. <Code>non-empty-lowercase-string</Code>, <Code>non-empty-uppercase-string</Code>, <Code>non-empty-literal-string</Code>.
+        </P>
       </>
     ),
     codeBlocks: [
@@ -181,6 +190,38 @@ function getConfig(string $configKey): mixed {
 getConfig('database_host'); // OK
 getConfig('other_key'); // PHPStan error`,
         explanation: "This advanced type uses an intersection (`&`) to enforce that the variable must be BOTH a `literal-string` AND specifically the value `'database_host'`. It's a way to enforce magic strings at a granular level."
+      },
+      {
+        language: 'php',
+        label: 'Case-Constrained Strings',
+        code: `/**
+ * @param non-empty-lowercase-string $slug
+ * @param uppercase-string           $countryCode
+ */
+function createRoute(string $slug, string $countryCode): string {
+    // PHPStan guarantees $slug is lowercase and not empty
+    // and $countryCode is fully uppercase
+    return "/$countryCode/$slug";
+}
+
+createRoute('my-article', 'DE');   // OK
+createRoute('My-Article', 'DE');   // PHPStan error — mixed case slug
+createRoute('my-article', 'de');   // PHPStan error — lowercase country code`,
+        explanation: "`lowercase-string` and `uppercase-string` (and their `non-empty-*` variants) enforce casing at the type level without any runtime `strtolower()` calls. Combine them with `non-empty-` to rule out empty strings at the same time."
+      },
+      {
+        language: 'php',
+        label: 'Array Key String Types',
+        code: `/**
+ * @param decimal-int-string     $numericKey  // '0', '42', '-1'
+ * @param non-decimal-int-string $stringKey   // '+1', '00', 'foo'
+ */
+function demonstrateArrayKeys(string $numericKey, string $stringKey): void {
+    $arr = [];
+    $arr[$numericKey] = 'a'; // key stored as int  — 0, 42, -1
+    $arr[$stringKey]  = 'b'; // key stored as string — '+1', '00', 'foo'
+}`,
+        explanation: "`decimal-int-string` covers strings that PHP silently converts to integer array keys (like `'42'`). `non-decimal-int-string` covers strings that stay as string keys (like `'+1'` or `'foo'`). These types are useful when dealing with mixed-key arrays or when you need to reason about PHP's coercion rules precisely."
       }
     ],
     quiz: {
