@@ -761,7 +761,7 @@ function process(callable $validator): void {
         code: `/**
  * @param callable(string, int=): string $formatter  // 2nd param optional
  * @param callable(int &$out): void     $mutator     // by-reference param
- * @param callable(float ...): float    $reducer     // variadic floats
+ * @param callable(float...): float     $reducer     // variadic floats
  */
 function applyAll(callable $formatter, callable $mutator, callable $reducer): void {
     echo $formatter('hello');           // OK without 2nd arg
@@ -826,7 +826,7 @@ function sortWith(\Closure $comparator, array $items): array {
         </P>
         <List items={[
           <><Strong>Call-site</Strong>: annotate the use-site with <Code>covariant</Code> or <Code>contravariant</Code> keywords inside angle brackets, e.g. <Code>Collection&lt;covariant Animal&gt;</Code>.</>,
-          <><Strong>Declaration-site</Strong>: annotate the template variable itself with <Code>@template-covariant T</Code> or <Code>@template-contravariant T</Code>.</>,
+          <><Strong>Declaration-site</Strong>: annotate the template variable itself with <Code>@template-covariant T</Code> (PHPStan also supports a contravariant counterpart, though it is rarely needed and not yet documented on phpstan.org).</>,
           <><Strong>Star projection</Strong>: <Code>Collection&lt;*&gt;</Code> means any type argument — both reads and writes are restricted.</>
         ]} />
       </>
@@ -1422,7 +1422,7 @@ function calculate(int $val): int {
           <><Code>static</Code>: Late static binding return</>,
           <><Code>callable(int, int=): string</Code>: Callable with optional second param</>,
           <><Code>callable(string &amp;$bar): mixed</Code>: Callable with by-reference param</>,
-          <><Code>callable(float ...): float</Code>: Callable with variadic params</>,
+          <><Code>callable(float...): float</Code>: Callable with variadic params</>,
           <><Code>\Closure(int, string): bool</Code>: Narrower Closure type (preferred)</>,
           <><Code>pure-Closure(int): string</Code>: Closure with no side effects</>,
           <><Code>Closure&lt;T&gt;(T, int): T</Code>: Generic Closure with type param</>,
@@ -1514,7 +1514,7 @@ export const PHPSTAN_TYPE_CATEGORIES: GuideExportTypeCategory[] = [
       { type: 'non-empty-lowercase-string', description: 'Non-empty lowercase string' },
       { type: 'uppercase-string', description: 'String where strtoupper($s) === $s' },
       { type: 'non-empty-uppercase-string', description: 'Non-empty uppercase string' },
-      { type: 'decimal-int-string', description: 'String PHP converts to an integer array key' },
+      { type: 'non-empty-literal-string', description: 'Non-empty literal (compile-time) string' },
       { type: 'non-decimal-int-string', description: 'String that stays a string array key' },
       { type: 'positive-int', description: 'Integer > 0' },
       { type: 'negative-int', description: 'Integer < 0' },
@@ -1567,7 +1567,7 @@ export const PHPSTAN_TYPE_CATEGORIES: GuideExportTypeCategory[] = [
       { type: 'static', description: 'Late static binding return type' },
       { type: 'callable(int, int=): string', description: 'Callable with optional second param' },
       { type: 'callable(string &$bar): mixed', description: 'Callable with by-reference param' },
-      { type: 'callable(float ...): float', description: 'Callable with variadic params' },
+      { type: 'callable(float...): float', description: 'Callable with variadic params' },
       { type: '\\Closure(int, string): bool', description: 'Narrower Closure type (preferred over callable)' },
       { type: 'pure-Closure(int): string', description: 'Closure with no side effects' },
       { type: 'Closure<T>(T, int): T', description: 'Generic Closure with type parameter' },
