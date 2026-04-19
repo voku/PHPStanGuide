@@ -592,10 +592,15 @@ function process(callable $validator): void {
           <><Code>@extends Collection&lt;T&gt;</Code>: Specifies generic type when extending.</>,
           <><Code>@implements Repository&lt;T&gt;</Code>: Specifies concrete type for interfaces.</>
         ]} />
-        <SubHeader>Advanced: Call-Site Variance</SubHeader>
+        <SubHeader>Advanced: Call-Site & Declaration-Site Variance</SubHeader>
         <P>
-          PHP lacks native covariant generics. PHPStan solves this with <Code>out</Code> (covariant) and <Code>in</Code> (contravariant) projections at the call site.
+          PHP lacks native covariant generics. PHPStan supports two approaches:
         </P>
+        <List items={[
+          <><Strong>Call-site</Strong>: annotate the use-site with <Code>covariant</Code> or <Code>contravariant</Code> keywords inside angle brackets, e.g. <Code>Collection&lt;covariant Animal&gt;</Code>.</>,
+          <><Strong>Declaration-site</Strong>: annotate the template variable itself with <Code>@template-covariant T</Code> or <Code>@template-contravariant T</Code>.</>,
+          <><Strong>Star projection</Strong>: <Code>Collection&lt;*&gt;</Code> means any type argument — both reads and writes are restricted.</>
+        ]} />
       </>
     ),
     codeBlocks: [
@@ -645,15 +650,27 @@ class UserRepository implements Repository {
       {
         language: 'php',
         label: 'Call-Site Variance',
-        code: `/** @param Collection<out Animal> $animals */
+        code: `/** @param Collection<covariant Animal> $animals */
 function treat(Collection $animals): void {
     // Safe: We can read Animals from it
     $animal = $animals->get(0);
     
     // Error: We cannot ADD to it, because it might be a Collection<Dog>
     // $animals->add(new Cat()); // ❌ PHPStan stops this
+}
+
+/** @param Collection<contravariant Dog> $sink */
+function collectDogs(Collection $sink): void {
+    // We can safely add Dogs; we just can't read specific sub-types back
+    $sink->add(new Dog());
+}
+
+/** @param Collection<*> $any */
+function count(Collection $any): int {
+    // Star projection: we don't care about the type; read & write restricted
+    return $any->count();
 }`,
-        explanation: "Using `<out Animal>` allows you to pass a `Collection<Dog>` to a function expecting `Collection<Animal>`. This is 'covariance'. It's safe because PHPStan prevents you from *adding* a generic `Animal` (which might be a Cat) into what is actually a list of Dogs."
+        explanation: "PHPStan uses the keywords `covariant` (read-only position) and `contravariant` (write-only position) at call sites. `Collection<covariant Animal>` allows passing a `Collection<Dog>` because Dogs are Animals and we only read from it. `Collection<*>` (star projection) accepts any type argument but restricts both reading and writing the typed elements."
       }
     ],
     quiz: {
