@@ -30,6 +30,7 @@ export interface GuideSection {
 export interface GuideExportTypeEntry {
   type: string;
   description: string;
+  example?: string;
 }
 
 export interface GuideExportTypeCategory {
@@ -53,6 +54,7 @@ export interface GuideExportExample {
 export interface GuideExportPayload {
   title: string;
   description: string;
+  usage?: string;
   generatedFrom: string;
   exportedAt?: string;
   bestPractices: GuideExportBestPractice[];
