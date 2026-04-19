@@ -556,6 +556,15 @@ foreach (getAlerts() as $alert) {
           <><Code>static</Code>: The class called at runtime (Late Static Binding).</>,
           <><Code>class-string&lt;T&gt;</Code>: A string that is a fully-qualified class name.</>
         ]} />
+        <SubHeader>class-string Family</SubHeader>
+        <P>
+          PHPStan narrows <Code>class-string</Code> further for specific kinds of types:
+        </P>
+        <List items={[
+          <><Code>interface-string</Code> (alias of <Code>class-string</Code>): The string is a valid interface name. Generic variant <Code>interface-string&lt;T&gt;</Code> also works.</>,
+          <><Code>trait-string</Code> (alias of <Code>class-string</Code>): The string is a valid trait name.</>,
+          <><Code>enum-string</Code>: The string is a class name of a PHP 8.1+ enum. Equivalent to <Code>class-string&lt;UnitEnum&gt;</Code>. Generic variant <Code>enum-string&lt;T&gt;</Code> further narrows the enum type.</>
+        ]} />
         <SubHeader>Union & Intersection Types</SubHeader>
         <P>
           Combine types to express complex relationships.
@@ -623,6 +632,24 @@ function create(string $class): object {
     return new $class(); // Strongly typed return
 }`,
         explanation: "`class-string<T>` is a powerhouse for Dependency Injection. It ensures that the string passed is not just any text, but a valid class name that specifically extends `Service`. The return type `T` then matches that specific class, giving you full IDE autocomplete on the result."
+      },
+      {
+        language: 'php',
+        label: 'enum-string / interface-string',
+        code: `/**
+ * @param enum-string<BackedEnum> $enumClass
+ */
+function getEnumValues(string $enumClass): array {
+    return array_column($enumClass::cases(), 'value');
+}
+
+/**
+ * @param interface-string<Countable> $iface
+ */
+function describeInterface(string $iface): string {
+    return "Interface: $iface";
+}`,
+        explanation: "`enum-string` ensures the string is a PHP 8.1+ enum class name. `interface-string<T>` ensures it is a valid interface name that extends `T`. These are aliases of `class-string` with narrower semantics, making your APIs self-documenting about what kind of class is expected."
       }
     ]
   },
