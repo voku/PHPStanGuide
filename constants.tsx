@@ -1507,7 +1507,7 @@ export const PHPSTAN_TYPE_CATEGORIES: GuideExportTypeCategory[] = [
     title: 'Scalar & Refined Pseudo-Types',
     types: [
       { type: 'non-empty-string', description: "String that's never ''" },
-      { type: 'non-falsy-string', description: "Truthy string — excludes '' and '0'" },
+      { type: 'non-falsy-string', description: "Truthy string (not '' or '0')" },
       { type: 'numeric-string', description: 'String that parses to a number' },
       { type: 'literal-string', description: 'String known at compile time' },
       { type: 'lowercase-string', description: 'String where strtolower($s) === $s' },
