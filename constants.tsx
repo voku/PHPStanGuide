@@ -994,6 +994,10 @@ checkWrite(Permissions::READ);        // PHPStan error`,
         <P>
           <Strong>Scope of Assertions:</Strong> Assertions like <Code>@phpstan-assert</Code> are <Strong>function-local</Strong>. They do not automatically propagate globally unless explicitly chained.
         </P>
+        <SubHeader>Bottom Type: never</SubHeader>
+        <P>
+          <Code>never</Code> (and its aliases <Code>noreturn</Code>, <Code>never-return</Code>, <Code>never-returns</Code>, <Code>no-return</Code>) is the bottom type — it means a function <Strong>never returns normally</Strong>. Use it when a function always throws or always exits. PHPStan uses this to eliminate dead code after the call.
+        </P>
       </>
     ),
     codeBlocks: [
@@ -1075,6 +1079,29 @@ if (check($x) && someComplexCondition()) {
     // PHPStan may drop the assertion if control flow gets too complex
 }`,
         explanation: "Assertions are fragile. If combined with complex boolean logic or external function calls that might have side effects, PHPStan may invalidate the narrowed type to be safe. Keep assertion logic simple and direct."
+      },
+      {
+        language: 'php',
+        label: 'never / noreturn — Bottom Type',
+        code: `/**
+ * @return never
+ */
+function abort(string $message): never {
+    throw new \RuntimeException($message);
+}
+
+/**
+ * @return ($value is not null ? string : never)
+ */
+function stringify(mixed $value): string {
+    if ($value === null) {
+        abort('Value cannot be null'); // PHPStan knows execution stops here
+    }
+    return (string) $value;
+}
+
+$result = stringify('hello'); // inferred as string (never branch eliminated)`,
+        explanation: "`@return never` (equivalent to `noreturn`, `never-return`, `never-returns`, `no-return`) tells PHPStan that execution never continues past this function — it always throws or exits. PHPStan uses this to eliminate dead code after the call and to narrow types in conditional return expressions like `($value is not null ? string : never)`."
       }
     ]
   },
