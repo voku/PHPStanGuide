@@ -1506,114 +1506,115 @@ export const PHPSTAN_TYPE_CATEGORIES: GuideExportTypeCategory[] = [
   {
     title: 'Scalar & Refined Pseudo-Types',
     types: [
-      { type: 'non-empty-string', description: "String that's never ''" },
-      { type: 'non-falsy-string', description: "Truthy string (not '' or '0')" },
-      { type: 'numeric-string', description: 'String that parses to a number' },
-      { type: 'literal-string', description: 'String known at compile time' },
-      { type: 'lowercase-string', description: 'String where strtolower($s) === $s' },
-      { type: 'non-empty-lowercase-string', description: 'Non-empty lowercase string' },
-      { type: 'uppercase-string', description: 'String where strtoupper($s) === $s' },
-      { type: 'non-empty-uppercase-string', description: 'Non-empty uppercase string' },
-      { type: 'non-empty-literal-string', description: 'Non-empty literal (compile-time) string' },
-      { type: 'non-decimal-int-string', description: 'String that stays a string array key' },
-      { type: 'positive-int', description: 'Integer > 0' },
-      { type: 'negative-int', description: 'Integer < 0' },
-      { type: 'non-negative-int', description: 'Integer >= 0' },
-      { type: 'non-positive-int', description: 'Integer <= 0' },
-      { type: 'non-zero-int', description: 'Any integer except 0' },
-      { type: 'int<0, 100>', description: 'Integer constrained to an explicit range' },
-      { type: 'int<min, 100>', description: 'Integer with upper bound only' },
-      { type: 'int<50, max>', description: 'Integer with lower bound only' },
-      { type: 'int-mask<1, 2, 4>', description: 'Bitmask composable from listed integers' },
-      { type: 'int-mask-of<Flags::*>', description: 'Bitmask from wildcard constants' },
-      { type: 'class-string<T>', description: 'Fully qualified class name (subtype of T)' },
-      { type: 'interface-string<T>', description: 'String is a valid interface name' },
-      { type: 'trait-string', description: 'String is a valid trait name' },
-      { type: 'enum-string<T>', description: 'String is a PHP 8.1+ enum class name' },
-      { type: 'callable-string', description: 'String PHP considers a valid callable' },
-      { type: 'never', description: 'Bottom type — function always throws or exits' },
-      { type: 'noreturn', description: 'Alias for never' }
+      { type: 'non-empty-string', description: "String that's never ''", example: "/** @param non-empty-string $username */" },
+      { type: 'non-falsy-string', description: "Truthy string (not '' or '0')", example: "/** @param non-falsy-string $token */" },
+      { type: 'numeric-string', description: 'String that parses to a number', example: "/** @param numeric-string $amount */" },
+      { type: 'literal-string', description: 'String known at compile time', example: "/** @param literal-string $sql */" },
+      { type: 'lowercase-string', description: 'String where strtolower($s) === $s', example: "/** @param lowercase-string $slug */" },
+      { type: 'non-empty-lowercase-string', description: 'Non-empty lowercase string', example: "/** @param non-empty-lowercase-string $slug */" },
+      { type: 'uppercase-string', description: 'String where strtoupper($s) === $s', example: "/** @param uppercase-string $countryCode */" },
+      { type: 'non-empty-uppercase-string', description: 'Non-empty uppercase string', example: "/** @param non-empty-uppercase-string $countryCode */" },
+      { type: 'non-empty-literal-string', description: 'Non-empty literal (compile-time) string', example: "/** @param non-empty-literal-string $query */" },
+      { type: 'decimal-int-string', description: "String PHP converts to an integer array key (e.g. '0', '42', '-1')", example: "/** @param decimal-int-string $id */ // '0', '42', '-1'" },
+      { type: 'non-decimal-int-string', description: "String that stays a string array key (e.g. '+1', '00', 'foo')", example: "/** @param non-decimal-int-string $key */ // '+1', '00', 'foo'" },
+      { type: 'positive-int', description: 'Integer > 0', example: "/** @param positive-int $id */" },
+      { type: 'negative-int', description: 'Integer < 0', example: "/** @param negative-int $offset */" },
+      { type: 'non-negative-int', description: 'Integer >= 0', example: "/** @param non-negative-int $count */" },
+      { type: 'non-positive-int', description: 'Integer <= 0', example: "/** @param non-positive-int $delta */" },
+      { type: 'non-zero-int', description: 'Any integer except 0', example: "/** @param non-zero-int $divisor */" },
+      { type: 'int<0, 100>', description: 'Integer constrained to an explicit range', example: "/** @param int<0, 100> $percent */" },
+      { type: 'int<min, 100>', description: 'Integer with upper bound only', example: "/** @param int<min, 0> $debt */ // any negative int or zero" },
+      { type: 'int<50, max>', description: 'Integer with lower bound only', example: "/** @param int<1, max> $id */ // any positive int" },
+      { type: 'int-mask<1, 2, 4>', description: 'Bitmask composable from listed integers (plus 0)', example: "/** @param int-mask<1, 2, 4> $flags */" },
+      { type: 'int-mask-of<Flags::*>', description: 'Bitmask from wildcard constants', example: "/** @param int-mask-of<JsonFlags::*> $flags */" },
+      { type: 'class-string<T>', description: 'Fully qualified class name (subtype of T)', example: "/** @template T of object\n * @param class-string<T> $cls\n * @return T */" },
+      { type: 'interface-string<T>', description: 'String is a valid interface name (alias of class-string)', example: "/** @param interface-string<Countable> $iface */" },
+      { type: 'trait-string', description: 'String is a valid trait name', example: "/** @param trait-string $trait */" },
+      { type: 'enum-string<T>', description: 'String is a PHP 8.1+ enum class name', example: "/** @param enum-string<BackedEnum> $enumClass */" },
+      { type: 'callable-string', description: 'String PHP considers a valid callable', example: "/** @param callable-string $fn */ // e.g. 'trim', 'Foo::bar'" },
+      { type: 'never', description: 'Bottom type — function always throws or exits', example: "/** @return never */\nfunction abort(string $msg): void { throw new \\RuntimeException($msg); }" },
+      { type: 'noreturn', description: 'Alias for never', example: "/** @return noreturn */ // identical to @return never" }
     ]
   },
   {
     title: 'Array & List Types',
     types: [
-      { type: 'list<T>', description: '0-based sequential array' },
-      { type: 'non-empty-list<T>', description: 'List with at least one element' },
-      { type: 'array<K, V>', description: 'Associative array / map' },
-      { type: 'non-empty-array<K, V>', description: 'Associative array with at least one element' },
-      { type: 'array{key: T}', description: 'Structured array with required keys' },
-      { type: 'array{key?: T}', description: 'Structured array with optional keys' },
-      { type: 'array-key', description: 'int|string' },
-      { type: "MyArray['key']", description: "Offset access — type of key 'key' in a type alias" },
-      { type: 'T[K]', description: 'Generic offset access — type of key K in type T' }
+      { type: 'list<T>', description: '0-based sequential array', example: "/** @param list<string> $emails */" },
+      { type: 'non-empty-list<T>', description: 'List with at least one element', example: "/** @param non-empty-list<int> $ids */" },
+      { type: 'array<K, V>', description: 'Associative array / map', example: "/** @param array<string, User> $map */" },
+      { type: 'non-empty-array<K, V>', description: 'Associative array with at least one element', example: "/** @param non-empty-array<string, int> $scores */" },
+      { type: 'array{key: T}', description: 'Structured array with required keys', example: "/** @param array{id: int, name: string} $user */" },
+      { type: 'array{key?: T}', description: 'Structured array with optional keys', example: "/** @param array{id: int, nickname?: string} $user */" },
+      { type: 'array-key', description: 'int|string — any valid PHP array key', example: "/** @param array-key $k */" },
+      { type: "MyArray['key']", description: "Offset access — type of key 'key' in a type alias", example: "/** @phpstan-type Row array{id: int, name: string}\n * @return Row['id'] */ // returns int" },
+      { type: 'T[K]', description: 'Generic offset access — type of key K in type T', example: "/** @template T of array<string, mixed>\n * @template K of key-of<T>\n * @param T $arr\n * @param K $key\n * @return T[K] */" }
     ]
   },
   {
     title: 'Object Shape Types',
     types: [
-      { type: 'object{foo: int, bar: string}', description: 'Object with required properties' },
-      { type: 'object{foo: int, bar?: string}', description: 'Object with optional property' },
-      { type: 'object{foo: int}&stdClass', description: 'Writable object shape intersected with stdClass' },
-      { type: 'list<object{id: int}&stdClass>', description: 'List of writable object shapes' }
+      { type: 'object{foo: int, bar: string}', description: 'Object with required properties', example: "/** @return object{id: int, name: string} */" },
+      { type: 'object{foo: int, bar?: string}', description: 'Object with optional property', example: "/** @param object{id: int, label?: string} $o */" },
+      { type: 'object{foo: int}&stdClass', description: 'Writable object shape intersected with stdClass', example: "/** @return object{x: int, y: int}&stdClass */" },
+      { type: 'list<object{id: int}&stdClass>', description: 'List of writable object shapes', example: "/** @return list<object{id: int, name: string}&stdClass> */" }
     ]
   },
   {
     title: 'Object, Class & Callable Types',
     types: [
-      { type: 'object', description: 'Any object' },
-      { type: 'self', description: 'Current class, excluding child overrides' },
-      { type: '$this', description: 'Current instance type for fluent APIs' },
-      { type: 'static', description: 'Late static binding return type' },
-      { type: 'callable(int, int=): string', description: 'Callable with optional second param' },
-      { type: 'callable(string &$bar): mixed', description: 'Callable with by-reference param' },
-      { type: 'callable(float...): float', description: 'Callable with variadic params' },
-      { type: '\\Closure(int, string): bool', description: 'Narrower Closure type (preferred over callable)' },
-      { type: 'pure-Closure(int): string', description: 'Closure with no side effects' },
-      { type: 'Closure<T>(T, int): T', description: 'Generic Closure with type parameter' },
-      { type: 'A & B', description: 'Intersection type: must satisfy both' },
-      { type: 'A | B', description: 'Union type: may satisfy either' }
+      { type: 'object', description: 'Any object', example: "/** @param object $obj */" },
+      { type: 'self', description: 'Current class, excluding child overrides', example: "/** @return self */" },
+      { type: '$this', description: 'Current instance type for fluent APIs', example: "/** @return $this */\npublic function setName(string $n): static { $this->name = $n; return $this; }" },
+      { type: 'static', description: 'Late static binding return type', example: "/** @return static */\npublic static function create(): static { return new static(); }" },
+      { type: 'callable(int, int=): string', description: 'Callable with optional second param', example: "/** @param callable(int, int=): string $fn */" },
+      { type: 'callable(string &$bar): mixed', description: 'Callable with by-reference param', example: "/** @param callable(string &$out): void $fn */" },
+      { type: 'callable(float...): float', description: 'Callable with variadic params', example: "/** @param callable(float...): float $reducer */" },
+      { type: '\\Closure(int, string): bool', description: 'Narrower Closure type (preferred over callable)', example: "/** @param \\Closure(int, string): bool $validator */" },
+      { type: 'pure-Closure(int): string', description: 'Closure with no side effects', example: "/** @param pure-Closure(int): string $serializer */" },
+      { type: 'Closure<T>(T, int): T', description: 'Generic Closure with type parameter', example: "/** @template T\n * @param Closure<T>(T, int): T $fn */" },
+      { type: 'A & B', description: 'Intersection type: must satisfy both A and B', example: "/** @param Stringable&Countable $obj */" },
+      { type: 'A | B', description: 'Union type: may satisfy either A or B', example: "/** @param string|int $id */" }
     ]
   },
   {
     title: 'Generics & Reusability',
     types: [
-      { type: '@template T', description: 'Declare a generic type variable' },
-      { type: '@template T of Foo', description: 'Constrain T to a subtype of Foo' },
-      { type: '@template T = string', description: 'Declare T with a default type' },
-      { type: '@template-covariant T', description: 'T only appears in output (read-only) positions' },
-      { type: '@extends Base<T>', description: 'Specify the generic parent type' },
-      { type: '@implements I<T>', description: 'Specify the generic interface type' },
-      { type: '@use Trait<T>', description: 'Specify the generic type for a used trait' },
-      { type: '@phpstan-type UserData array{id: int, name: string}', description: 'Create a reusable type alias' },
-      { type: '@phpstan-import-type', description: 'Import a type alias from another scope' }
+      { type: '@template T', description: 'Declare a generic type variable', example: "/** @template T\n * @param T $item\n * @return T */" },
+      { type: '@template T of Foo', description: 'Constrain T to a subtype of Foo', example: "/** @template T of \\Exception\n * @param T $e\n * @return T */" },
+      { type: '@template T = string', description: 'Declare T with a default type', example: "/** @template T = string\n * @param T $val */" },
+      { type: '@template-covariant T', description: 'T only appears in output (read-only) positions', example: "/** @template-covariant T */\ninterface ReadonlyBox {\n    /** @return T */\n    public function get(): mixed;\n}" },
+      { type: '@extends Base<T>', description: 'Specify the generic parent type', example: "/** @template T\n * @extends Collection<T> */\nclass MyList extends Collection {}" },
+      { type: '@implements I<T>', description: 'Specify the generic interface type', example: "/** @implements Repository<User> */\nclass UserRepo implements Repository {}" },
+      { type: '@use Trait<T>', description: 'Specify the generic type for a used trait', example: "/** @use AttributeTrait<array{name: string}> */\nclass Foo { use AttributeTrait; }" },
+      { type: '@phpstan-type UserData array{id: int, name: string}', description: 'Create a reusable type alias scoped to the class', example: "/** @phpstan-type UserData array{id: int, name: string} */\nclass UserService {}" },
+      { type: '@phpstan-import-type', description: 'Import a type alias from another class', example: "/** @phpstan-import-type UserData from UserService */\nclass OrderService {}" }
     ]
   },
   {
     title: 'Constraints & Logic',
     types: [
-      { type: "'a'|'b'", description: 'Literal union of allowed values' },
-      { type: 'Foo::ADMIN_*', description: 'Constants matching a prefix' },
-      { type: 'Foo::*FOO*', description: 'Constants containing a substring' },
-      { type: 'Foo::*', description: 'All constants on a class or enum' },
-      { type: 'key-of<Foo::TYPES>', description: 'Keys of an array constant or enum-backed definition' },
-      { type: 'value-of<Foo::TYPES>', description: 'Values of an array constant or enum-backed definition' },
-      { type: '@phpstan-assert T $v', description: 'Assert the type after a call' },
-      { type: '@phpstan-assert-if-true T $v', description: 'Assert the type when the call returns true' },
-      { type: '@phpstan-assert-if-false T $v', description: 'Assert the type when the call returns false' },
-      { type: '@return ($asFloat is true ? float : string)', description: 'Conditional return type based on an input value' },
-      { type: '@return never', description: 'Function always throws or exits' },
-      { type: '@param-out T $v', description: 'Type of a by-reference parameter after the call' },
-      { type: '@throws T', description: 'Declare checked exceptions' },
-      { type: '@phpstan-pure', description: 'Mark a function as side-effect free' }
+      { type: "'a'|'b'", description: 'Literal union of allowed string values', example: "/** @param 'asc'|'desc' $dir */" },
+      { type: 'Foo::ADMIN_*', description: 'Constants matching a prefix', example: "/** @param Permissions::ADMIN_* $perm */" },
+      { type: 'Foo::*FOO*', description: 'Constants containing a substring', example: "/** @param Status::*ACTIVE* $s */" },
+      { type: 'Foo::*', description: 'All constants on a class or enum', example: "/** @param Direction::* $dir */" },
+      { type: 'key-of<Foo::TYPES>', description: 'Union of valid keys of an array constant', example: "/** @param key-of<self::ROLES> $role */ // 'admin'|'editor'" },
+      { type: 'value-of<Foo::TYPES>', description: 'Union of valid values of an array constant or backed enum', example: "/** @return value-of<self::ROLES> */ // 1|2" },
+      { type: '@phpstan-assert T $v', description: 'Assert the type of an argument after a call', example: "/** @phpstan-assert \\stdClass $obj */\nfunction assertStd(mixed $obj): void { if (!$obj instanceof \\stdClass) throw new \\Exception(); }" },
+      { type: '@phpstan-assert-if-true T $v', description: 'Assert the type when the call returns true', example: "/** @phpstan-assert-if-true \\stdClass $obj */\nfunction isStd(mixed $obj): bool { return $obj instanceof \\stdClass; }" },
+      { type: '@phpstan-assert-if-false T $v', description: 'Assert the type when the call returns false', example: "/** @phpstan-assert-if-false null $obj */\nfunction exists(mixed $obj): bool { return $obj !== null; }" },
+      { type: '@return ($asFloat is true ? float : string)', description: 'Conditional return type based on an input value', example: "/** @param bool $asFloat\n * @return ($asFloat is true ? float : string) */\nfunction convert(bool $asFloat, string $v): float|string { return $asFloat ? (float)$v : $v; }" },
+      { type: '@return never', description: 'Function always throws or exits', example: "/** @return never */\nfunction abort(string $msg): void { throw new \\RuntimeException($msg); }" },
+      { type: '@param-out T $v', description: 'Type of a by-reference parameter after the call completes', example: "/** @param-out int $result */\nfunction compute(int &$result): void { $result = 42; }" },
+      { type: '@throws T', description: 'Declare a checked exception', example: "/** @throws \\InvalidArgumentException */\nfunction validate(mixed $v): void {}" },
+      { type: '@phpstan-pure', description: 'Mark a function as side-effect free', example: "/** @phpstan-pure */\nfunction add(int $a, int $b): int { return $a + $b; }" }
     ]
   },
   {
     title: 'Suppression',
     types: [
-      { type: '@phpstan-ignore error.identifier', description: 'Ignore a specific error identifier' },
-      { type: '@phpstan-ignore-next-line', description: 'Ignore the next line' },
-      { type: '@phpstan-ignore-line', description: 'Ignore the current line' }
+      { type: '@phpstan-ignore error.identifier', description: 'Ignore a specific error identifier on the next line', example: "// @phpstan-ignore offsetAccess.nonOffsetAccessible\n$x = $arr['key'];" },
+      { type: '@phpstan-ignore-next-line', description: 'Ignore all errors on the next line', example: "// @phpstan-ignore-next-line\n$x = $arr['key'];" },
+      { type: '@phpstan-ignore-line', description: 'Ignore all errors on the current line', example: "$x = $arr['key']; // @phpstan-ignore-line" }
     ]
   }
 ];
@@ -1647,7 +1648,8 @@ export const PHPSTAN_BEST_PRACTICES: GuideExportBestPractice[] = [
 
 export const GUIDE_EXPORT_DATA: GuideExportPayload = {
   title: 'PHPStan Guide JSON Export',
-  description: 'Best practices, examples, and PHPStan type reference data for copy/paste into LLM workflows.',
+  description: 'A structured reference of all PHPStan PHPDoc types, best practices, and annotated PHP examples. Designed for copy-paste into LLM workflows or AI tooling to provide accurate PHPStan type knowledge.',
+  usage: 'Paste this JSON into your LLM context with a prompt like: "Using the PHPStan type reference below, help me annotate the following PHP code." The `typeCategories` array contains every supported type with a description and a minimal usage example. The `examples` array contains longer, real-world annotated PHP snippets grouped by topic. The `bestPractices` array lists concise rules-of-thumb. `allTypes` is a flat list of all type strings for quick lookup.',
   generatedFrom: 'https://github.com/voku/PHPStanGuide',
   bestPractices: PHPSTAN_BEST_PRACTICES,
   typeCategories: PHPSTAN_TYPE_CATEGORIES,
