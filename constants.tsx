@@ -761,8 +761,16 @@ function sortWith(\Closure $comparator, array $items): array {
         <SubHeader>Key Annotations</SubHeader>
         <List items={[
           <><Code>@template T</Code>: Declares a generic placeholder.</>,
+          <><Code>@template T of Foo</Code>: Constrains T to a subtype of <Code>Foo</Code>.</>,
+          <><Code>@template T = string</Code>: Declares T with a <Strong>default</Strong> — callers don't have to specify it explicitly.</>,
           <><Code>@extends Collection&lt;T&gt;</Code>: Specifies generic type when extending.</>,
-          <><Code>@implements Repository&lt;T&gt;</Code>: Specifies concrete type for interfaces.</>
+          <><Code>@implements Repository&lt;T&gt;</Code>: Specifies concrete type for interfaces.</>,
+          <><Code>@use AttributeTrait&lt;T&gt;</Code>: Specifies concrete type when using a generic trait.</>
+        ]} />
+        <SubHeader>Utility Types for Generics</SubHeader>
+        <List items={[
+          <><Code>template-type(Collection, T)</Code>: Extracts the concrete type argument <Code>T</Code> from an object whose class is generic.</>,
+          <><Code>new T</Code>: Creates an object type from a <Code>class-string&lt;T&gt;</Code> type (useful in return types).</>
         ]} />
         <SubHeader>Advanced: Call-Site & Declaration-Site Variance</SubHeader>
         <P>
@@ -843,6 +851,65 @@ function count(Collection $any): int {
     return $any->count();
 }`,
         explanation: "PHPStan uses the keywords `covariant` (read-only position) and `contravariant` (write-only position) at call sites. `Collection<covariant Animal>` allows passing a `Collection<Dog>` because Dogs are Animals and we only read from it. `Collection<*>` (star projection) accepts any type argument but restricts both reading and writing the typed elements."
+      },
+      {
+        language: 'php',
+        label: 'Declaration-Site Covariance (@template-covariant)',
+        code: `/**
+ * @template-covariant T
+ */
+interface ReadonlyCollection
+{
+    /** @return T */
+    public function get(int $index): mixed;
+
+    public function count(): int;
+}
+
+/**
+ * @param ReadonlyCollection<Animal> $animals
+ */
+function feed(ReadonlyCollection $animals): void {
+    foreach (range(0, $animals->count() - 1) as $i) {
+        $animals->get($i)->eat(); // $animals->get() returns Animal
+    }
+}
+
+// Works! Collection<Dog> is a subtype of ReadonlyCollection<Animal>
+// because T is covariant (only appears in output positions)
+$dogs = new DogCollection(); // implements ReadonlyCollection<Dog>
+feed($dogs); // OK`,
+        explanation: "`@template-covariant T` means `T` only appears in output (return) positions. This makes `ReadonlyCollection<Dog>` a subtype of `ReadonlyCollection<Animal>`, so you can pass a `DogCollection` wherever an `AnimalCollection` is expected — without needing call-site annotations."
+      },
+      {
+        language: 'php',
+        label: 'Template Defaults (@template T = string)',
+        code: `/**
+ * @template TKey = string
+ * @template TValue = mixed
+ */
+class Registry
+{
+    /** @var array<TKey, TValue> */
+    private array $items = [];
+
+    /**
+     * @param TKey   $key
+     * @param TValue $value
+     */
+    public function set(mixed $key, mixed $value): void
+    {
+        $this->items[$key] = $value;
+    }
+}
+
+// Both TKey and TValue use defaults → Registry<string, mixed>
+$r1 = new Registry();
+
+// Explicitly specify both → Registry<int, User>
+/** @var Registry<int, User> $r2 */
+$r2 = new Registry();`,
+        explanation: "Template defaults (`@template T = string`) mean callers don't have to specify type arguments explicitly when the default is correct. This is especially useful for library code that wants sensible defaults while still allowing full specialization."
       }
     ],
     quiz: {
