@@ -679,10 +679,17 @@ function treat(Collection $animals): void {
           <><Strong>Native Enums</Strong>: PHP 8.1+</>,
           <><Strong>Array Constraints</Strong>: <Code>key-of</Code> / <Code>value-of</Code></>
         ]} />
-        <SubHeader>Blind Spots: Wildcards & Exhaustiveness</SubHeader>
+        <SubHeader>Wildcards & Exhaustiveness</SubHeader>
          <P>
-          <Strong>Wildcards:</Strong> <Code>CONST_*</Code> matching is <Strong>case-sensitive</Strong>. The asterisk works as a prefix (e.g. at the end), but not in the middle or as a suffix without custom rules.
+          <Strong>Wildcards:</Strong> <Code>CONST_*</Code> matching is <Strong>case-sensitive</Strong>. Wildcards are more flexible than many developers expect — all of the following patterns are supported:
         </P>
+        <List items={[
+          <><Code>Foo::ADMIN_*</Code> — prefix match (starts with <Code>ADMIN_</Code>)</>,
+          <><Code>Foo::*_SUFFIX</Code> or <Code>self::*BAR</Code> — suffix match (ends with pattern)</>,
+          <><Code>Foo::FOO_*BAR</Code> — prefix <em>and</em> suffix match simultaneously</>,
+          <><Code>Foo::*FOO*</Code> — substring match (contains <Code>FOO</Code> anywhere)</>,
+          <><Code>Foo::*</Code> — all constants on a class</>
+        ]} />
         <P>
           <Strong>Exhaustiveness:</Strong> When using literal types like <Code>'a'|'b'</Code>, PHPStan can enforce that you handle every possible case in a <Code>match</Code> expression.
         </P>
@@ -745,36 +752,36 @@ assignRole('guest'); // PHPStan error`,
       },
       {
         language: 'php',
-        label: 'Constant Wildcards (All Constants)',
+        label: 'Constant Wildcards (All Patterns)',
         code: `class Permissions {
-    public const READ = 'read';
-    public const WRITE = 'write';
-    public const DELETE = 'delete';
-    public const ADMIN_READ = 'admin_read';
+    public const READ        = 'read';
+    public const WRITE       = 'write';
+    public const ADMIN_READ  = 'admin_read';
     public const ADMIN_WRITE = 'admin_write';
+    public const READ_AUDIT  = 'read_audit';
+    public const LOG_WRITE   = 'log_write';
 }
 
-/**
- * @param Permissions::* $permission
- */
-function checkPermission(string $permission): void {
-    // Accepts ANY constant from Permissions class
-    // 'read', 'write', 'delete', 'admin_read', 'admin_write'
-}
+/** @param Permissions::* $p — all constants */
+function checkAny(string $p): void {}
 
-/**
- * @param Permissions::ADMIN_* $adminPermission
- */
-function checkAdminPermission(string $adminPermission): void {
-    // Only accepts constants starting with ADMIN_
-    // 'admin_read', 'admin_write'
-}
+/** @param Permissions::ADMIN_* $p — prefix match */
+function checkAdmin(string $p): void {}
 
-checkPermission(Permissions::READ); // OK
-checkPermission(Permissions::ADMIN_WRITE); // OK
-checkAdminPermission(Permissions::ADMIN_READ); // OK
-checkAdminPermission(Permissions::READ); // PHPStan error`,
-        explanation: "The wildcard syntax `Foo::*` accepts all constants from a class. You can also use prefixes like `Foo::ADMIN_*` to match only constants starting with that prefix. This is extremely useful for grouping related constants while maintaining type safety."
+/** @param Permissions::*_WRITE $p — suffix match */
+function checkWrite(string $p): void {}
+
+/** @param Permissions::ADMIN_*_WRITE $p — prefix + suffix */
+function checkAdminWrite(string $p): void {}
+
+/** @param Permissions::*READ* $p — substring match */
+function checkRead(string $p): void {}
+
+checkAdmin(Permissions::ADMIN_READ);  // OK
+checkAdmin(Permissions::READ);        // PHPStan error
+checkWrite(Permissions::ADMIN_WRITE); // OK
+checkWrite(Permissions::READ);        // PHPStan error`,
+        explanation: "Wildcards in constant patterns are far more powerful than just prefix matching. You can match by suffix (`*_WRITE`), by both prefix and suffix simultaneously (`ADMIN_*_WRITE`), or by substring (`*READ*`). All matching is case-sensitive."
       }
     ]
   },
