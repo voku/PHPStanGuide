@@ -1368,14 +1368,29 @@ function calculate(int $val): int {
 
         <SubHeader>Scalar & Refined Pseudo-Types</SubHeader>
         <List items={[
-          <><Code>non-empty-string</Code>: String that’s never <Code>''</Code></>,
+          <><Code>non-empty-string</Code>: String that's never <Code>''</Code></>,
+          <><Code>non-falsy-string</Code> / <Code>truthy-string</Code>: Truthy string (excludes <Code>''</Code> and <Code>'0'</Code>)</>,
           <><Code>numeric-string</Code>: String that parses to number ("123", "1.5")</>,
           <><Code>literal-string</Code>: String known at compile time</>,
+          <><Code>lowercase-string</Code> / <Code>non-empty-lowercase-string</Code>: Lowercase-constrained strings</>,
+          <><Code>uppercase-string</Code> / <Code>non-empty-uppercase-string</Code>: Uppercase-constrained strings</>,
+          <><Code>decimal-int-string</Code>: String PHP converts to integer array key</>,
+          <><Code>non-decimal-int-string</Code>: String that stays a string array key</>,
           <><Code>positive-int</Code>: Integer {'>'} 0</>,
+          <><Code>negative-int</Code>: Integer {'<'} 0</>,
           <><Code>non-negative-int</Code>: Integer {'>='} 0</>,
-          <><Code>int&lt;min, max&gt;</Code>: Integer between min and max</>,
+          <><Code>non-positive-int</Code>: Integer {'<='} 0</>,
+          <><Code>non-zero-int</Code>: Any integer except 0</>,
+          <><Code>int&lt;0, 100&gt;</Code>: Integer within explicit bounds</>,
+          <><Code>int&lt;min, 100&gt;</Code> / <Code>int&lt;50, max&gt;</Code>: One-sided integer bounds</>,
+          <><Code>int-mask&lt;1, 2, 4&gt;</Code>: Bitmask from listed integers (includes 0)</>,
+          <><Code>int-mask-of&lt;Flags::*&gt;</Code>: Bitmask from wildcard constants</>,
           <><Code>class-string&lt;T&gt;</Code>: Fully qualified class name (subtype of T)</>,
-          <><Code>callable-string</Code>: String name of a global callable</>
+          <><Code>interface-string&lt;T&gt;</Code>: String is a valid interface name</>,
+          <><Code>trait-string</Code>: String is a valid trait name</>,
+          <><Code>enum-string&lt;T&gt;</Code>: String is a PHP 8.1+ enum class name</>,
+          <><Code>callable-string</Code>: String PHP considers a valid callable</>,
+          <><Code>never</Code> / <Code>noreturn</Code>: Function always throws or exits (bottom type)</>
         ]} />
 
         <SubHeader>Array & List Types</SubHeader>
@@ -1386,7 +1401,9 @@ function calculate(int $val): int {
           <><Code>non-empty-array&lt;K, V&gt;</Code>: Associative array with at least one element</>,
           <><Code>array{'{'}key: T{'}'}</Code>: Structured array with required keys</>,
           <><Code>array{'{'}key?: T{'}'}</Code>: Structured array with optional keys</>,
-          <><Code>array-key</Code>: <Code>int|string</Code></>
+          <><Code>array-key</Code>: <Code>int|string</Code></>,
+          <><Code>MyArray['key']</Code>: Offset access — type of key <Code>'key'</Code> in an alias</>,
+          <><Code>T[K]</Code>: Generic offset access — type of key <Code>K</Code> in type <Code>T</Code></>
         ]} />
 
         <SubHeader>Object Shape Types</SubHeader>
@@ -1403,8 +1420,13 @@ function calculate(int $val): int {
           <><Code>self</Code>: Current class (not child)</>,
           <><Code>$this</Code>: Instance of calling class</>,
           <><Code>static</Code>: Late static binding return</>,
-          <><Code>callable(int, string): bool</Code>: Callable signature</>,
-          <><Code>A & B</Code>: Intersection (must be A AND B)</>,
+          <><Code>callable(int, int=): string</Code>: Callable with optional second param</>,
+          <><Code>callable(string &amp;$bar): mixed</Code>: Callable with by-reference param</>,
+          <><Code>callable(float ...): float</Code>: Callable with variadic params</>,
+          <><Code>\Closure(int, string): bool</Code>: Narrower Closure type (preferred)</>,
+          <><Code>pure-Closure(int): string</Code>: Closure with no side effects</>,
+          <><Code>Closure&lt;T&gt;(T, int): T</Code>: Generic Closure with type param</>,
+          <><Code>A &amp; B</Code>: Intersection (must be A AND B)</>,
           <><Code>A | B</Code>: Union (A or B)</>
         ]} />
 
@@ -1412,8 +1434,11 @@ function calculate(int $val): int {
         <List items={[
           <><Code>@template T</Code>: Declare type variable</>,
           <><Code>@template T of Foo</Code>: Restrict T to subtype of Foo</>,
+          <><Code>@template T = string</Code>: Declare T with a default type</>,
+          <><Code>@template-covariant T</Code>: T only appears in output (read-only) positions</>,
           <><Code>@extends Base&lt;T&gt;</Code>: Specifies type T for parent</>,
           <><Code>@implements I&lt;T&gt;</Code>: Specifies type T for interface</>,
+          <><Code>@use Trait&lt;T&gt;</Code>: Specifies type T for a generic trait</>,
           <><Code>@phpstan-type UserData array{'{'}id: int, name: string{'}'}</Code>: Alias for complex types</>,
           <><Code>@phpstan-import-type</Code>: Import alias from another scope</>
         ]} />
@@ -1421,7 +1446,8 @@ function calculate(int $val): int {
         <SubHeader>Constraints & Logic</SubHeader>
         <List items={[
           <><Code>'a'|'b'</Code>: Literal values</>,
-          <><Code>Class::CONST_*</Code>: All constants matching prefix</>,
+          <><Code>Foo::ADMIN_*</Code>: Constants matching prefix</>,
+          <><Code>Foo::*FOO*</Code>: Constants containing substring</>,
           <><Code>Foo::*</Code>: All constants on Foo</>,
           <><Code>key-of&lt;Foo::TYPES&gt;</Code>: Union of valid array keys</>,
           <><Code>value-of&lt;Foo::TYPES&gt;</Code>: Union of valid array values</>,
@@ -1429,6 +1455,7 @@ function calculate(int $val): int {
           <><Code>@phpstan-assert-if-true T $v</Code>: Assert if returns true</>,
           <><Code>@phpstan-assert-if-false T $v</Code>: Assert if returns false</>,
           <><Code>@return ($asFloat is true ? float : string)</Code>: Conditional return type</>,
+          <><Code>@return never</Code>: Function always throws or exits</>,
           <><Code>@param-out T $v</Code>: Type after function finishes</>,
           <><Code>@throws T</Code>: Declares checked exception</>,
           <><Code>@phpstan-pure</Code>: Marks function as side-effect free</>
@@ -1480,13 +1507,32 @@ export const PHPSTAN_TYPE_CATEGORIES: GuideExportTypeCategory[] = [
     title: 'Scalar & Refined Pseudo-Types',
     types: [
       { type: 'non-empty-string', description: "String that's never ''" },
+      { type: 'non-falsy-string', description: "Truthy string — excludes '' and '0'" },
       { type: 'numeric-string', description: 'String that parses to a number' },
       { type: 'literal-string', description: 'String known at compile time' },
+      { type: 'lowercase-string', description: 'String where strtolower($s) === $s' },
+      { type: 'non-empty-lowercase-string', description: 'Non-empty lowercase string' },
+      { type: 'uppercase-string', description: 'String where strtoupper($s) === $s' },
+      { type: 'non-empty-uppercase-string', description: 'Non-empty uppercase string' },
+      { type: 'decimal-int-string', description: 'String PHP converts to an integer array key' },
+      { type: 'non-decimal-int-string', description: 'String that stays a string array key' },
       { type: 'positive-int', description: 'Integer > 0' },
+      { type: 'negative-int', description: 'Integer < 0' },
       { type: 'non-negative-int', description: 'Integer >= 0' },
-      { type: 'int<min, max>', description: 'Integer constrained to a range' },
-      { type: 'class-string<T>', description: 'Fully qualified class name for T' },
-      { type: 'callable-string', description: 'String name of a global callable' }
+      { type: 'non-positive-int', description: 'Integer <= 0' },
+      { type: 'non-zero-int', description: 'Any integer except 0' },
+      { type: 'int<0, 100>', description: 'Integer constrained to an explicit range' },
+      { type: 'int<min, 100>', description: 'Integer with upper bound only' },
+      { type: 'int<50, max>', description: 'Integer with lower bound only' },
+      { type: 'int-mask<1, 2, 4>', description: 'Bitmask composable from listed integers' },
+      { type: 'int-mask-of<Flags::*>', description: 'Bitmask from wildcard constants' },
+      { type: 'class-string<T>', description: 'Fully qualified class name (subtype of T)' },
+      { type: 'interface-string<T>', description: 'String is a valid interface name' },
+      { type: 'trait-string', description: 'String is a valid trait name' },
+      { type: 'enum-string<T>', description: 'String is a PHP 8.1+ enum class name' },
+      { type: 'callable-string', description: 'String PHP considers a valid callable' },
+      { type: 'never', description: 'Bottom type — function always throws or exits' },
+      { type: 'noreturn', description: 'Alias for never' }
     ]
   },
   {
@@ -1498,7 +1544,9 @@ export const PHPSTAN_TYPE_CATEGORIES: GuideExportTypeCategory[] = [
       { type: 'non-empty-array<K, V>', description: 'Associative array with at least one element' },
       { type: 'array{key: T}', description: 'Structured array with required keys' },
       { type: 'array{key?: T}', description: 'Structured array with optional keys' },
-      { type: 'array-key', description: 'int|string' }
+      { type: 'array-key', description: 'int|string' },
+      { type: "MyArray['key']", description: "Offset access — type of key 'key' in a type alias" },
+      { type: 'T[K]', description: 'Generic offset access — type of key K in type T' }
     ]
   },
   {
@@ -1517,7 +1565,12 @@ export const PHPSTAN_TYPE_CATEGORIES: GuideExportTypeCategory[] = [
       { type: 'self', description: 'Current class, excluding child overrides' },
       { type: '$this', description: 'Current instance type for fluent APIs' },
       { type: 'static', description: 'Late static binding return type' },
-      { type: 'callable(int, string): bool', description: 'Callable signature' },
+      { type: 'callable(int, int=): string', description: 'Callable with optional second param' },
+      { type: 'callable(string &$bar): mixed', description: 'Callable with by-reference param' },
+      { type: 'callable(float ...): float', description: 'Callable with variadic params' },
+      { type: '\\Closure(int, string): bool', description: 'Narrower Closure type (preferred over callable)' },
+      { type: 'pure-Closure(int): string', description: 'Closure with no side effects' },
+      { type: 'Closure<T>(T, int): T', description: 'Generic Closure with type parameter' },
       { type: 'A & B', description: 'Intersection type: must satisfy both' },
       { type: 'A | B', description: 'Union type: may satisfy either' }
     ]
@@ -1527,8 +1580,11 @@ export const PHPSTAN_TYPE_CATEGORIES: GuideExportTypeCategory[] = [
     types: [
       { type: '@template T', description: 'Declare a generic type variable' },
       { type: '@template T of Foo', description: 'Constrain T to a subtype of Foo' },
+      { type: '@template T = string', description: 'Declare T with a default type' },
+      { type: '@template-covariant T', description: 'T only appears in output (read-only) positions' },
       { type: '@extends Base<T>', description: 'Specify the generic parent type' },
       { type: '@implements I<T>', description: 'Specify the generic interface type' },
+      { type: '@use Trait<T>', description: 'Specify the generic type for a used trait' },
       { type: '@phpstan-type UserData array{id: int, name: string}', description: 'Create a reusable type alias' },
       { type: '@phpstan-import-type', description: 'Import a type alias from another scope' }
     ]
@@ -1537,7 +1593,8 @@ export const PHPSTAN_TYPE_CATEGORIES: GuideExportTypeCategory[] = [
     title: 'Constraints & Logic',
     types: [
       { type: "'a'|'b'", description: 'Literal union of allowed values' },
-      { type: 'Class::CONST_*', description: 'All constants matching a prefix' },
+      { type: 'Foo::ADMIN_*', description: 'Constants matching a prefix' },
+      { type: 'Foo::*FOO*', description: 'Constants containing a substring' },
       { type: 'Foo::*', description: 'All constants on a class or enum' },
       { type: 'key-of<Foo::TYPES>', description: 'Keys of an array constant or enum-backed definition' },
       { type: 'value-of<Foo::TYPES>', description: 'Values of an array constant or enum-backed definition' },
@@ -1545,6 +1602,7 @@ export const PHPSTAN_TYPE_CATEGORIES: GuideExportTypeCategory[] = [
       { type: '@phpstan-assert-if-true T $v', description: 'Assert the type when the call returns true' },
       { type: '@phpstan-assert-if-false T $v', description: 'Assert the type when the call returns false' },
       { type: '@return ($asFloat is true ? float : string)', description: 'Conditional return type based on an input value' },
+      { type: '@return never', description: 'Function always throws or exits' },
       { type: '@param-out T $v', description: 'Type of a by-reference parameter after the call' },
       { type: '@throws T', description: 'Declare checked exceptions' },
       { type: '@phpstan-pure', description: 'Mark a function as side-effect free' }
