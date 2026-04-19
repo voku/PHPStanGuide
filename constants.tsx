@@ -659,10 +659,22 @@ function describeInterface(string $iface): string {
     content: (
       <>
         <P>Just saying <Code>callable</Code> is not enough. Document the signature.</P>
-        <P><Strong>Syntax</Strong>: <Code>callable(ParamTypes): ReturnType</Code></P>
+        <P><Strong>Basic syntax</Strong>: <Code>callable(ParamTypes): ReturnType</Code></P>
+        <SubHeader>Full Syntax Reference</SubHeader>
+        <List items={[
+          <><Code>callable(int, int): string</Code> — accepts two integers, returns a string</>,
+          <><Code>callable(int, int=): string</Code> — second param is optional</>,
+          <><Code>callable(string &amp;$bar): mixed</Code> — param passed by reference</>,
+          <><Code>callable(float ...$floats): (int|null)</Code> — variadic params</>,
+          <><Code>\Closure(int, int): string</Code> — narrower Closure type (preferred over callable)</>,
+          <><Code>pure-callable(int): string</Code> — callable with no side effects</>,
+          <><Code>pure-Closure(int): string</Code> — Closure with no side effects</>,
+          <><Code>Closure&lt;T&gt;(T, int): T</Code> — generic Closure with type parameter</>,
+          <><Code>Closure&lt;T of Foo&gt;(T): T</Code> — generic Closure with bounded type parameter</>
+        ]} />
         <SubHeader>Blind Spot: Callable Strings</SubHeader>
         <P>
-          <Code>callable-string</Code> is tricky. It works for global functions, but often fails for object methods or closures. Prefer <Code>Closure</Code> or strict <Code>callable(...)</Code> syntax.
+          <Code>callable-string</Code> means any string PHP considers a valid callable. It works for global function names, but private methods or closures captured via <Code>{`$this->method(...)`}</Code> are <Strong>not</Strong> callable strings. Prefer <Code>\Closure</Code> or typed <Code>callable(...)</Code> syntax for precise contracts.
         </P>
       </>
     ),
@@ -694,6 +706,49 @@ function process(callable $validator): void {
     }
 }`,
         explanation: "Many developers try to return the string method name. But `callable-string` implies it can be called *from where it is used*. Private methods cannot. Using `Closure` (via `$this->method(...)`) captures the scope correctly."
+      },
+      {
+        language: 'php',
+        label: 'Optional, By-Ref & Variadic Params',
+        code: `/**
+ * @param callable(string, int=): string $formatter  // 2nd param optional
+ * @param callable(int &$out): void     $mutator     // by-reference param
+ * @param callable(float ...): float    $reducer     // variadic floats
+ */
+function applyAll(callable $formatter, callable $mutator, callable $reducer): void {
+    echo $formatter('hello');           // OK without 2nd arg
+    echo $formatter('hello', 42);       // OK with 2nd arg
+
+    $val = 0;
+    $mutator($val);                     // $val may change
+
+    echo $reducer(1.0, 2.0, 3.0);      // variadic call
+}`,
+        explanation: "PHPStan supports the full PHP callable syntax in PHPDocs. Use `param=` for optional parameters, `&$param` for pass-by-reference, and `...$params` or just `...` for variadic arguments. This level of precision removes the need for inline type assertions after each call."
+      },
+      {
+        language: 'php',
+        label: 'pure-Closure & Generic Closure',
+        code: `/**
+ * @param pure-Closure(int): string $serialize
+ */
+function memoize(pure-Closure $serialize, int $id): string {
+    static $cache = [];
+    // PHPStan knows $serialize has no side effects, so caching is safe
+    return $cache[$id] ??= $serialize($id);
+}
+
+/**
+ * @template T
+ * @param Closure<T>(T, T): bool $comparator
+ * @param list<T>                $items
+ * @return list<T>
+ */
+function sortWith(\Closure $comparator, array $items): array {
+    usort($items, $comparator);
+    return $items;
+}`,
+        explanation: "`pure-Closure` tells PHPStan the closure has no side effects, enabling stronger reasoning like safe memoization. A generic `Closure<T>` propagates type variables from inputs to outputs, so PHPStan can infer that `sortWith` works with any homogeneous list without losing the element type."
       }
     ]
   },
