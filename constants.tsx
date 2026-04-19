@@ -204,9 +204,23 @@ getConfig('other_key'); // PHPStan error`,
         <SubHeader>Key Types</SubHeader>
         <List items={[
           <><Code>positive-int</Code>: Integer {'>'} 0.</>,
-          <><Code>non-negative-int</Code>: Integer {'>='} 0.</>,
-          <><Code>int&lt;min, max&gt;</Code>: Integer within a specific range.</>,
+          <><Code>negative-int</Code>: Integer {'<'} 0.</>,
+          <><Code>non-negative-int</Code>: Integer {'>='} 0 (includes zero).</>,
+          <><Code>non-positive-int</Code>: Integer {'<='} 0 (includes zero).</>,
+          <><Code>non-zero-int</Code>: Any integer except 0.</>,
+          <><Code>int&lt;0, 100&gt;</Code>: Integer within an explicit range.</>,
+          <><Code>int&lt;min, 100&gt;</Code>: Integer with only an upper bound (any integer up to 100).</>,
+          <><Code>int&lt;50, max&gt;</Code>: Integer with only a lower bound (any integer from 50 up).</>,
           <><Code>numeric</Code>: <Code>int</Code>, <Code>float</Code>, or <Code>numeric-string</Code>.</>
+        ]} />
+        <SubHeader>Integer Masks</SubHeader>
+        <P>
+          Some functions accept a bitmask built by OR-ing integer constants together. PHPStan can statically verify the allowed combinations:
+        </P>
+        <List items={[
+          <><Code>int-mask&lt;1, 2, 4&gt;</Code>: Values composable from the listed integers (plus <Code>0</Code>).</>,
+          <><Code>int-mask-of&lt;1|2|4&gt;</Code>: Same, written as a union.</>,
+          <><Code>int-mask-of&lt;Flags::FLAG_*&gt;</Code>: Uses all constants matching the wildcard.</>
         ]} />
       </>
     ),
@@ -252,6 +266,41 @@ normalize("5.4"); // OK
 normalize(3); // OK
 normalize("not a number"); // PHPStan error`,
         explanation: "`numeric` is a loose type that accepts integers, floats, and numeric strings (like '12.34'). It's useful for handling data from sources like CSVs or generic APIs where numbers might be strings but need to be treated mathematically."
+      },
+      {
+        language: 'php',
+        label: 'Unbounded Range (min / max)',
+        code: `/**
+ * @param int<min, -1> $debt   // any negative integer
+ * @param int<0, max>  $index  // any non-negative integer
+ */
+function adjustBalance(int $debt, int $index): void {
+    // PHPStan enforces the direction of each bound
+}
+
+adjustBalance(-50, 0); // OK
+adjustBalance(10, 5);  // PHPStan error for $debt`,
+        explanation: "The special `min` and `max` sentinels let you express one-sided bounds. `int<min, -1>` means 'any strictly negative integer', and `int<0, max>` means 'any non-negative integer'. These are more readable than `negative-int` when you need a partial range."
+      },
+      {
+        language: 'php',
+        label: 'Integer Masks (Bitmasks)',
+        code: `class JsonFlags {
+    public const PRETTY  = JSON_PRETTY_PRINT;      // 128
+    public const UNICODE = JSON_UNESCAPED_UNICODE; // 256
+    public const SLASHES = JSON_UNESCAPED_SLASHES; // 64
+}
+
+/**
+ * @param int-mask-of<JsonFlags::*> $flags
+ */
+function encodeJson(mixed $data, int $flags = 0): string {
+    return json_encode($data, $flags) ?? '';
+}
+
+encodeJson($data, JsonFlags::PRETTY | JsonFlags::UNICODE); // OK
+encodeJson($data, 999); // PHPStan error: not a valid bitmask`,
+        explanation: "`int-mask-of<Flags::*>` restricts the parameter to values that can be built by OR-ing the listed constants together (including 0). It's the correct type for bitmask flags like `JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE`. PHPStan will reject any integer that cannot be composed from those constants."
       }
     ],
     quiz: {
