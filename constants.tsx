@@ -826,7 +826,7 @@ function sortWith(\Closure $comparator, array $items): array {
         </P>
         <List items={[
           <><Strong>Call-site</Strong>: annotate the use-site with <Code>covariant</Code> or <Code>contravariant</Code> keywords inside angle brackets, e.g. <Code>Collection&lt;covariant Animal&gt;</Code>.</>,
-          <><Strong>Declaration-site</Strong>: annotate the template variable itself with <Code>@template-covariant T</Code> (PHPStan also supports a contravariant counterpart, though it is rarely needed and not yet documented on phpstan.org).</>,
+          <><Strong>Declaration-site</Strong>: annotate the template variable itself with <Code>@template-covariant T</Code> (or <Code>@template-contravariant T</Code> for the contravariant counterpart, though it is rarely needed in practice).</>,
           <><Strong>Star projection</Strong>: <Code>Collection&lt;*&gt;</Code> means any type argument — both reads and writes are restricted.</>
         ]} />
       </>
