@@ -22,6 +22,24 @@ jobs:
         with:
           node-version: '22'
           cache: npm
+      - name: Verify package-lock root metadata
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+          const manifest = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+          const root = JSON.parse(fs.readFileSync('package-lock.json', 'utf8')).packages?.[''];
+          if (!root) throw new Error('Missing package-lock root metadata');
+          for (const group of ['dependencies', 'devDependencies']) {
+            const declared = manifest[group] || {};
+            const locked = root[group] || {};
+            for (const key of new Set([...Object.keys(declared), ...Object.keys(locked)])) {
+              if (declared[key] !== locked[key]) {
+                console.error(group + '.' + key + ': declared=' + declared[key] + ' locked=' + locked[key]);
+                process.exitCode = 1;
+              }
+            }
+          }
+          NODE
       - name: Install dependencies
         run: npm ci --no-audit --no-fund
       - name: Static checks
